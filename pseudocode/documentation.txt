@@ -1,0 +1,8 @@
+Statistics class:
+    The statistics class performs complex calculations on the CsvData object. Operations such as finding the largest or smallest value or finding the mean value are trivial enough that it can be included as features of the CsvData object. However, the concept of unsafe readings are business constraints\logic that will change often. The purpose of CsvData object is to simply 
+
+    CsvData class exists to provide an easy means of handling csv data. It is independent of the business logic and its requirements. It should support basic, well known statistical operations such as finding min/max values or finding mean etc., since csv files can be used for any reason in any context. The business can use this module in other projects without the needing for reinventing a class similar to CsvData.
+
+    On the other hand, there are operations that are specific to the business or task, i.e. business logic. For example, unsafe sensor reading sets a threshhold and reports any reading that is above the said threshhold. This requirement is specific to this task and therefore should not be implemented as a part of the CsvData class.
+
+    
