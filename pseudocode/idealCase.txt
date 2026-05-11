@@ -1,0 +1,12 @@
+In an ideal case, reading and building CsvData would be separated. This is to make CsvData more generic.
+
+CSV class would read the CSV file and convert each record into a data type. The data type can be specified by passing the class as an argument. This allows the CsvData to hold any type of data.
+
+To avoid ambiguity and seamless integration, developers must implement CsvDataType interface in their classes.
+
+CSV class:
+    public static CsvData<T> readCSV (String filePath);
+
+CsvDataType class:
+    public abstract <T> T parseString(String str);
+        This class is meant to be overriden by data type classes. This method parses each line of the 

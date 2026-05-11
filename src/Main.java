@@ -1,10 +1,11 @@
 import java.util.Scanner;
+import logger.Logger;
 
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean endProgram = false;
-
+        Logger logger = new Logger();
 
         while (!endProgram) {
             String menu = "Welcome to the Smart greenhouse Monitoring System."
@@ -17,13 +18,15 @@ public class Main {
             + '\n' + "6. Exit program"
             + "\n\n" + "Your choice: ";
 
+            logger.log(menu);
+
             int choice = getValidInput(scanner, menu, 1, 6);
         }
 
     }
 
     public static int getValidInput(Scanner scanner, String prompt, int start, int end) {
-        System.out.println(prompt);
+        System.out.print(prompt);
         int choice;
         while (true) {
             try {

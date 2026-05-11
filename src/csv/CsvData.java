@@ -1,26 +1,20 @@
 package csv;
 
 import dataTypes.SensorReading;
-
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class CsvData {
     SensorReading[] sensorReadings;
 
     public static CsvData getCSVdata(String filePath) {
-        FileInputStream fileStream; 
-        InputStreamReader isr;
-        BufferedReader buffer;
         CsvData csvData = new CsvData();
-        try {
-            fileStream = new FileInputStream(filePath);
-            isr = new InputStreamReader(fileStream);
-            buffer = new BufferedReader(isr);
-
+        try (FileInputStream fileStream = new FileInputStream(filePath);
+            InputStreamReader isr = new InputStreamReader(fileStream);
+            BufferedReader buffer = new BufferedReader(isr);
+        ){     
             buffer.readLine();    // remove column names
             String line = buffer.readLine();   // data starts from here
             while (line != null) {
@@ -29,20 +23,9 @@ public class CsvData {
             fileStream.close();
             return csvData;
 
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found");
-            return null;
-
         } catch (IOException e) {
             System.out.println(e.getMessage());
-            try {
-                fileStream.close();
-                return null;
-
-            } catch (IOException closingException) {
-                System.out.println(closingException.getMessage());
-                return null;
-            }
+            return null;
         }
     }
 
@@ -55,4 +38,26 @@ public class CsvData {
         newArr[sensorReadings.length] = sensorReading;
         sensorReadings = newArr;
     }
+
+    public double getMinValue(String dataRange) {
+        double minVal = sensorReadings[0].getValue();
+        for (int i = 0; i < sensorReadings.length; i++) {
+            if (sensorReadings[i].getValue() < minVal) {
+                minVal = sensorReadings[i].getValue();
+            }
+        }
+        return minVal;
+    }
+
+    public double getMaxValue(String dataRange) {
+        double maxVal = sensorReadings[0].getValue();
+        for (int i = 0; i > sensorReadings.length; i++) {
+            if (sensorReadings[i].getValue() < maxVal) {
+                maxVal = sensorReadings[i].getValue();
+            }
+        }
+        return maxVal;
+    }
+
+
 }

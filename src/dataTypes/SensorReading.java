@@ -1,11 +1,11 @@
 package dataTypes;
 
 public class SensorReading {
-    String sensorID;
-    String sensorType;
-    String zone;
-    double value;
-    Timestamp timestamp;
+    private String sensorID;
+    private String sensorType;
+    private String zone;
+    private double value;
+    private Timestamp timestamp;
 
     public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) {
         this.sensorID = sensorID;
@@ -27,4 +27,19 @@ public class SensorReading {
         );
     }
 
+    public double getValue() {
+        return value;
+    }
+    public String getSensorType() {
+        return sensorType;
+    }
+    public String getSensorID() {
+        return sensorID;
+    }
+    public String getZone() {
+        return zone;
+    }
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
 }
