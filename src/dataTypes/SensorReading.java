@@ -86,6 +86,13 @@ public class SensorReading {
         timestamp = time;
     }
 
+    public double getUpperBound() {
+        return upper;
+    }
+    public double getLowerBound() {
+        return lower;
+    }
+
     private String validateZone(String zone) throws InvalidParameterException{
         if (!zone.substring(0, 4).equals("Zone")) {
             throw new InvalidParameterException();
