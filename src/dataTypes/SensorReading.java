@@ -8,6 +8,9 @@ public class SensorReading {
     private String zone;
     private double value;
     private Timestamp timestamp;
+    private double upper;
+    private double lower;
+
 
     public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) throws InvalidParameterException {
         this.sensorID = validateSensorID(sensorID);
@@ -15,9 +18,28 @@ public class SensorReading {
         this.zone = validateZone(zone);
         this.value = value;
         this.timestamp = timestamp;
+
+        switch (sensorType) {
+            case "temperature" -> {
+                upper = 30.0; 
+                lower = 18.0;
+            }
+            case "humidity" -> {
+                upper = 40.0;
+                lower = 70.0;
+            }
+            case "soilMoisture" -> {
+                upper = 30.0;
+                lower = 60.0;
+            }
+            case "light" -> {
+                upper = 300.0;
+                lower = 1200.0;
+            }
+        }        
     }
 
-    public static SensorReading stringToSensorReading(String line) {
+    public static SensorReading stringToSensorReading(String line) throws InvalidParameterException {
         String[] data = line.split(",");
 
         return new SensorReading(
@@ -46,6 +68,10 @@ public class SensorReading {
     public String getSensorID() {
         return sensorID;
     }
+    public void setSensorID(String id) {
+        sensorID = validateSensorID(id);
+    }
+
     public String getZone() {
         return zone;
     }
@@ -66,7 +92,7 @@ public class SensorReading {
         }
         for (int i = 4; i < zone.length(); i++) {
            if (zone.charAt(i) == ' ') {
-            throw new InvalidParameterException();
+            throw new InvalidParameterException("Invalid Zone format.");
            }
         }
         return zone;
@@ -77,7 +103,7 @@ public class SensorReading {
         || sensor.equals("humidity")
         || sensor.equals("soilMoisture")
         || sensor.equals("light"))) {
-            throw new InvalidParameterException();
+            throw new InvalidParameterException("Invalid sensor type");
         }
         return sensor;
     }
@@ -85,11 +111,10 @@ public class SensorReading {
     private String validateSensorID(String sensorID) throws InvalidParameterException {
         if (!(sensorID.substring(0,3).equals("TMP")    // checks the 3 character sensor ID
         || sensorID.substring(0,3).equals("HMD")
-        || sensorID.substring(0,3).equals("LGT"))) {
-            throw new InvalidParameterException();
-        } else if (!sensorID.substring(0,4).equals("SOIL")) { // checks the 4 character sensor ID, i.e. SOIL
-            throw new InvalidParameterException();
-        }
+        || sensorID.substring(0,3).equals("LGT")
+        || sensorID.substring(0,4).equals("SOIL"))) {
+            throw new InvalidParameterException("Invalid sensor ID");
+        } 
         return sensorID;
     }
 }
