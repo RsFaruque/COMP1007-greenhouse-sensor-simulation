@@ -32,17 +32,32 @@ public class SensorReading {
     public double getValue() {
         return value;
     }
+    public void setValue(double val) {
+        value = val;
+    }
+
     public String getSensorType() {
         return sensorType;
     }
+    public void setSensorType(String type) {
+        sensorType = validateSensorType(type);
+    }
+
     public String getSensorID() {
         return sensorID;
     }
     public String getZone() {
         return zone;
     }
+    public void setZone(String zone) {
+        this.zone = zone;
+    }
+
     public Timestamp getTimestamp() {
         return timestamp;
+    }
+    public void setTimestamp(Timestamp time) {
+        timestamp = time;
     }
 
     private String validateZone(String zone) throws InvalidParameterException{
