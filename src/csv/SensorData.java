@@ -83,13 +83,14 @@ public class SensorData {
         return count;
     }
 
-    public 
+    public double getUnsafeReadingPercent(String dataRange) {
+        return (double) getUnsafeReadingCount(dataRange) / sensorReadings.length * 100;
+    }
 
     private boolean evaluateFilter(SensorReading sensor, String dataRange) {
         if (dataRange.equals("all"))
             return true;
-        return 
-            sensor.getSensorType().equals(dataRange) 
+        return sensor.getSensorType().equals(dataRange) 
             || sensor.getZone().equals(dataRange);
     }
 }
