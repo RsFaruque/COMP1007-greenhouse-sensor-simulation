@@ -94,13 +94,10 @@ public class SensorReading {
     }
 
     private String validateZone(String zone) throws InvalidParameterException{
-        if (!zone.substring(0, 4).equals("Zone")) {
-            throw new InvalidParameterException();
-        }
-        for (int i = 4; i < zone.length(); i++) {
-           if (zone.charAt(i) == ' ') {
-            throw new InvalidParameterException("Invalid Zone format.");
-           }
+        if (!(zone.equals("ZoneA")
+        || zone.equals("ZoneA")
+        || zone.equals("ZoneA"))) {
+            throw new InvalidParameterException("Zone is not one of ZoneA, ZoneB, ZoneC");
         }
         return zone;
     }
