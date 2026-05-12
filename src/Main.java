@@ -2,10 +2,11 @@ import java.util.Scanner;
 import logger.Logger;
 
 public class Main {
+    static Logger logger = new Logger();
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean endProgram = false;
-        Logger logger = new Logger();
 
         while (!endProgram) {
             String menu = "Welcome to the Smart greenhouse Monitoring System."
@@ -18,15 +19,21 @@ public class Main {
             + '\n' + "6. Exit program"
             + "\n\n" + "Your choice: ";
 
-            logger.log(menu);
+            // 
 
             int choice = getValidInput(scanner, menu, 1, 6);
+
+            String dataRange = "all";
+            switch (choice) {
+                case 1 -> dataRange = "all";
+                case 2 -> dataRange = ""
+            }
         }
 
     }
 
     public static int getValidInput(Scanner scanner, String prompt, int start, int end) {
-        System.out.print(prompt);
+        logger.log(prompt);
         int choice;
         while (true) {
             try {
@@ -35,35 +42,16 @@ public class Main {
                 if (choice >= start && choice <= end) {
                     return choice;
                 } else {
-                    System.out.println("Invalid input. Selection must be within range");
+                    logger.log("Invalid input. Selection must be within range\n");
                 }
             } catch (IllegalArgumentException e) {
-                System.out.println("Invalid input. Must be an integer.");
+                logger.log("Invalid input. Must be an integer.");
             }
         }
     }
 
 
-    public static void totalReadingsOption1(Scanner scanner) {
+    public static String selectZone(Scanner scanner) {
         
     }
-    public static void avgValOption2(Scanner scanner) {
-        
-    }
-    public static void minValOption3(Scanner scanner) {
-        
-    }
-    public static void maxValOption4(Scanner scanner) {
-        
-    }
-    public static void outsideSafeOption5(Scanner scanner) {
-        
-    }
-    public static void percentOutsideSafeOption6(Scanner scanner) {
-        
-    }
-    public static void allStatOption7(Scanner scanner) {
-        
-    }
-
 }
