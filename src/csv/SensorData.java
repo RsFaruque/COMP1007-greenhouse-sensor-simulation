@@ -37,6 +37,16 @@ public class SensorData {
         sensorReadings = newArr;
     }
 
+    public int getTotalCount(String dataRange) {
+        int count = 0;
+        for (int i = 0; i < sensorReadings.length; i++) {
+            if (evaluateFilter(sensorReadings[i], dataRange)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public double getMinValue(String dataRange) {
         double minVal = sensorReadings[0].getValue();
         for (int i = 0; i < sensorReadings.length; i++) {
