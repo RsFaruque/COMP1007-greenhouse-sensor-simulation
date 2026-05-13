@@ -10,11 +10,12 @@ public class Logger {
 
     public void log(Object obj) {
         try (
-            FileOutputStream file = new FileOutputStream("src/logs.txt");
+            FileOutputStream file = new FileOutputStream("src/logs.txt", true);
             OutputStreamWriter streamWriter = new OutputStreamWriter(file);
             BufferedWriter buffWriter = new BufferedWriter(streamWriter);
         ) {
-            buffWriter.append(obj.toString());
+            buffWriter.write(obj.toString());
+            buffWriter.write("\n");
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
