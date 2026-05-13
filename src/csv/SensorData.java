@@ -9,8 +9,8 @@ import java.io.InputStreamReader;
 public class SensorData {
     SensorReading[] sensorReadings;
 
-    public static SensorData readCsv(String filePath) {
-        SensorData csvData = new SensorData();
+    public SensorData(String filePath) {
+        // SensorData csvData = new SensorData();
         try (FileInputStream fileStream = new FileInputStream(filePath);
             InputStreamReader isr = new InputStreamReader(fileStream);
             BufferedReader buffer = new BufferedReader(isr);
@@ -18,18 +18,16 @@ public class SensorData {
             buffer.readLine();                 // remove column names
             String line = buffer.readLine();   // data starts from here
             while (line != null) {
-                csvData.append(SensorReading.stringToSensorReading(line));
+                append(SensorReading.stringToSensorReading(line));
             }
             fileStream.close();
-            return csvData;
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
-            return null;
         }
     }
 
-    public void append(SensorReading sensorReading) {
+    public final void append(SensorReading sensorReading) {
         SensorReading[] newArr = new SensorReading[sensorReadings.length + 1];
 
         for (int i = 0; i < sensorReadings.length; i++) {
