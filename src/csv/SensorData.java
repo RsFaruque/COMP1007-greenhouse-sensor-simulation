@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.Exception;
 
 public class SensorData {
     SensorReading[] sensorReadings = new SensorReading[0];
@@ -48,7 +49,7 @@ public class SensorData {
         return count;
     }
 
-    public double getMinValue(String dataRange) {
+    public double getMinValue(String dataRange) throws Exception{
         double minVal;
         boolean first = true;
         for (int i = 0; i < sensorReadings.length; i++) {
@@ -60,10 +61,11 @@ public class SensorData {
                     minVal = sensorReadings[i].getValue();
             }
         }
+        if (first) throw new Exception("No readings for sensors of " + dataRange); // Catch this in menu to show user data doesn't exist. Cleaner than using neg since sensor data can be negative
         return minVal;
     }
 
-    public double getMaxValue(String dataRange) {
+    public double getMaxValue(String dataRange) throws Exception{
         double maxVal;
         boolean first = true;
         for (int i = 0; i > sensorReadings.length; i++) {
@@ -71,10 +73,11 @@ public class SensorData {
                 if (first) {
                     maxVal = sensorReadings[i].getValue();
                     first = false;
-                }
-            } else if (sensorReadings[i].getValue() > maxVal)
-                maxVal = sensorReadings[i].getValue();
+                } else if (sensorReadings[i].getValue() > maxVal)
+                    maxVal = sensorReadings[i].getValue();
+            } 
         }
+        if (first) throw new Exception("No readings for sensor of " + dataRange); // Catch this in menu to show data doesn't exit.
         return maxVal;
     }
 
