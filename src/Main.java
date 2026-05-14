@@ -126,11 +126,19 @@ public class Main {
     }
 
     public static void subOp3MinVal(String dataRange, SensorData csvData) {
-        logger.log("The lowest sensor reading of " + dataRange + " sensors is " + csvData.getMinValue(dataRange) + '\n');
+        try {
+            logger.log("The lowest sensor reading of " + dataRange + " sensors is " + csvData.getMinValue(dataRange) + '\n');
+        } catch (Exception e) {
+            logger.log("There are no readings for " + dataRange + " sensors\n");
+        }
     }
 
     public static void subOp4MaxVal(String dataRange, SensorData csvData) {
-        logger.log("The highest sensor reading value of " + dataRange + " sensors is " + csvData.getMaxValue(dataRange) + '\n');
+        try {
+            logger.log("The largest sensor reading of " + dataRange + " sensors is " + csvData.getMaxValue(dataRange) + '\n');
+        } catch (Exception e) {
+            logger.log("There are no readings for " + dataRange + " sensors\n");
+        }
     }
 
     public static void subOp5UnsafeCount(String dataRange, SensorData csvData) {
