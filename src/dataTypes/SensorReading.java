@@ -41,7 +41,6 @@ public class SensorReading {
 
     public static SensorReading stringToSensorReading(String line) throws InvalidParameterException {
         String[] data = line.split(",");
-
         return new SensorReading(
             data[5],  // sensorID
             data[6],  // sensorType
@@ -95,9 +94,9 @@ public class SensorReading {
 
     private String validateZone(String zone) throws InvalidParameterException{
         if (!(zone.equals("ZoneA")
-        || zone.equals("ZoneA")
-        || zone.equals("ZoneA"))) {
-            throw new InvalidParameterException("Zone is not one of ZoneA, ZoneB, ZoneC");
+        || zone.equals("ZoneB")
+        || zone.equals("ZoneC"))) {
+            throw new InvalidParameterException("Zone is not one of ZoneA, ZoneB, ZoneC | Zone entered: " + zone);
         }
         return zone;
     }

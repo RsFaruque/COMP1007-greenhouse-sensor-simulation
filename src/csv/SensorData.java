@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class SensorData {
-    SensorReading[] sensorReadings;
+    SensorReading[] sensorReadings = new SensorReading[0];
 
     public SensorData(String filePath) {
         // SensorData csvData = new SensorData();
@@ -19,6 +19,7 @@ public class SensorData {
             String line = buffer.readLine();   // data starts from here
             while (line != null) {
                 append(SensorReading.stringToSensorReading(line));
+                line = buffer.readLine();
             }
             fileStream.close();
 
@@ -48,34 +49,46 @@ public class SensorData {
     }
 
     public double getMinValue(String dataRange) {
-        double minVal = sensorReadings[0].getValue();
+        double minVal;
+        boolean first = true;
         for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange) 
-            && sensorReadings[i].getValue() < minVal) {
-                minVal = sensorReadings[i].getValue();
+            if (evaluateFilter(sensorReadings[i], dataRange)) {
+                if (first) {
+                    minVal = sensorReadings[i].getValue();
+                    first = false;
+                } else if (sensorReadings[i].getValue() < minVal)
+                    minVal = sensorReadings[i].getValue();
             }
         }
         return minVal;
     }
 
     public double getMaxValue(String dataRange) {
-        double maxVal = sensorReadings[0].getValue();
+        double maxVal;
+        boolean first = true;
         for (int i = 0; i > sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange) 
-            && sensorReadings[i].getValue() < maxVal) {
+            if (evaluateFilter(sensorReadings[i], dataRange)) {
+                if (first) {
+                    maxVal = sensorReadings[i].getValue();
+                    first = false;
+                }
+            } else if (sensorReadings[i].getValue() > maxVal)
                 maxVal = sensorReadings[i].getValue();
-            }
         }
         return maxVal;
     }
 
     public double getMeanValue(String dataRange) {
         double total = 0;
+        int count = 0;
         for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange))
+            if (evaluateFilter(sensorReadings[i], dataRange)) {
                 total += sensorReadings[i].getValue();
+                count++;
+                System.out.println("Debug -> count="+count+" total="+total);
+            }
         }
-        return total / sensorReadings.length;
+        return total / count;
     }
 
     public int getUnsafeReadingCount(String dataRange) {

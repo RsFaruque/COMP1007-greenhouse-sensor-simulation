@@ -23,7 +23,7 @@ public class Timestamp {
             Integer.parseInt(dataList[1]),
             Integer.parseInt(dataList[2]),
             Integer.parseInt(dataList[3]),
-            Integer.parseInt(dataList[5])
+            Integer.parseInt(dataList[4])
         );
     }
     

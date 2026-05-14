@@ -9,31 +9,31 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         boolean endProgram = false;
         SensorData csvData = new SensorData("D:\\Curtin_university\\semester 1\\COMP1007\\Assignment\\data.csv");
+        String state = "main";  // use this state to control which menu to display and when to reset dataRange;
+        String dataRange = "";
 
         while (!endProgram) {
-            String menu = "\nWelcome to the Smart greenhouse Monitoring System."
-            + '\n' + "Please select an option:"
-            + '\n' + "1. Statistics for the entire greenhouse"
-            + '\n' + "2. Statistics by zone"
-            + '\n' + "3. Statistics by sensor type"
-            + '\n' + "4. Add data readings"
-            + '\n' + "5. Delete data readings"
-            + '\n' + "6. Exit program\n";
-            logger.log(menu);
+            if (state.equals("main")) {
+                logger.log("\nWelcome to the Smart greenhouse Monitoring System."
+                    + '\n' + "Please select an option:"
+                    + '\n' + "1. Statistics for the entire greenhouse"
+                    + '\n' + "2. Statistics by zone"
+                    + '\n' + "3. Statistics by sensor type"
+                    + '\n' + "4. Add data readings"
+                    + '\n' + "5. Delete data readings"
+                    + '\n' + "6. Exit program\n"
+                );
+                switch (getValidInputInRange(scanner, 1, 6)) {
+                    case 1 -> dataRange = "all";
+                    case 2 -> dataRange = selectZone(scanner);
+                    case 3 -> dataRange = selectSensorType(scanner);
+                    case 4 -> addData(scanner);
+                    case 5 -> deleteData(scanner);
+                    case 6 -> endProgram = true;
+                }    
+                state = "sub";    // once range is selected, change state to sub(menu)
 
-            int choice = getValidInputInRange(scanner, 1, 6);
-
-            String dataRange = "";
-            switch (choice) {
-                case 1 -> dataRange = "all";
-                case 2 -> dataRange = selectZone(scanner);
-                case 3 -> dataRange = selectSensorType(scanner);
-                case 4 -> addData(scanner);
-                case 5 -> deleteData(scanner);
-                case 6 -> endProgram = true;
-            }
-
-            if (!dataRange.equals("")) {
+            } else if (state.equals("sub")) {
                 logger.log("\nSelect a statistic:"
                     + '\n' + "1. Total number of readings"
                     + '\n' + "2. Average value"
@@ -41,12 +41,10 @@ public class Main {
                     + '\n' + "4. Maximum value"
                     + '\n' + "5. Number of readings outside safe range"
                     + '\n' + "6. Percentage of readings outside safe range"
-                    + '\n' + "7. All statistics\n"
+                    + '\n' + "7. All statisticsn"
+                    + '\n' + "8. Go back to main menu\n"
                 );
-
-                choice = getValidInputInRange(scanner, 1, 7);
-
-                switch(choice) {
+                switch(getValidInputInRange(scanner, 1, 8)) {
                     case 1 -> subOp1TotalCount(dataRange, csvData);
                     case 2 -> subOp2MeanVal(dataRange, csvData);
                     case 3 -> subOp3MinVal(dataRange, csvData);
@@ -54,9 +52,9 @@ public class Main {
                     case 5 -> subOp5UnsafeCount(dataRange, csvData);
                     case 6 -> subOp6UnsafePercentage(dataRange, csvData);
                     case 7 -> subOp7AllStat(dataRange, csvData);
+                    case 8 -> {state = "main"; dataRange = "";}  // if dataRange is not changed, the previous selection remains when the user selects 4 or 5 in the main menu instead of the 1-3
                 }
             }
-
         }
 
     }
