@@ -1,17 +1,24 @@
 package csv;
 
-import dataTypes.SensorReading;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.Exception;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.BufferedWriter;
+
+import dataTypes.Timestamp;
+import dataTypes.SensorReading;
+import logger.Logger;
+
 
 public class SensorData {
     SensorReading[] sensorReadings = new SensorReading[0];
+    String filePath = "";
 
     public SensorData(String filePath) {
-        // SensorData csvData = new SensorData();
+        this.filePath = filePath;
         try (FileInputStream fileStream = new FileInputStream(filePath);
             InputStreamReader isr = new InputStreamReader(fileStream);
             BufferedReader buffer = new BufferedReader(isr);
@@ -117,4 +124,37 @@ public class SensorData {
         return sensor.getSensorType().equals(dataRange) 
             || sensor.getZone().equals(dataRange);
     }
+
+    public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws InvalidParameterException {
+        Logger logger = new Logger();
+        SensorReading newReading = new SensorReading(
+            sensorID,
+            sensorType,
+            zone,
+            value,
+            time
+        );
+        try (
+            FileOutputStream file = new FileOutputStream(filePath, true);
+            OutputStreamWriter streamWriter = new OutputStreamWriter(file);
+            BufferedWriter buffWriter = new BufferedWriter(streamWriter);
+        ){
+            buffWriter.write(
+                "" + newReading.getTimestamp().getDay()
+                + ',' + newReading.getTimestamp().getMonth()
+                + ',' + newReading.getTimestamp().getYear()
+                + ',' + newReading.getTimestamp().getHour()
+                + ',' + newReading.getTimestamp().getMinute()
+                + ',' + newReading.getSensorID()
+                + ',' + newReading.getSensorType()
+                + ',' + newReading.getZone()
+                + ',' + newReading.getValue()
+                + '\n'
+            );
+            append(newReading);
+        } catch (IOException e) {
+            logger.log(e.getMessage());
+        }
+    }
+
 }
