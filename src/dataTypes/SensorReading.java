@@ -2,11 +2,11 @@ package datatypes;
 
 
 public class SensorReading {
-    private String sensorID;
-    private String sensorType;
-    private String zone;
-    private double value;
-    private Timestamp timestamp;
+    private String sensorID = "UNK";
+    private String sensorType = "unknown";
+    private String zone = "unknown";
+    private double value = 0;
+    private Timestamp timestamp = new Timestamp();
 
     
     public static final String[] sensorTypeList = {"temperature", "soilMoisture", "humidity", "light"};
@@ -20,6 +20,17 @@ public class SensorReading {
         this.value = value;
         this.timestamp = timestamp;
     }
+
+    public SensorReading(SensorReading sensor) {
+        sensorID = sensor.getSensorID();
+        sensorType = sensor.getSensorType();
+        zone = sensor.getZone();
+        value = sensor.getValue();
+        timestamp = sensor.getTimestamp();
+    }
+
+    public SensorReading() {}
+
 
     public static SensorReading stringToSensorReading(String line) throws IllegalArgumentException {
         String[] data = line.split(",");

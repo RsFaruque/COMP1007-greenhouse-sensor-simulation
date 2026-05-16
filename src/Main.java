@@ -202,7 +202,11 @@ public class Main {
     }
 
     public static void subOp2MeanVal(String dataRange, SensorData csvData) {
-        logger.logAndDisplay("\nThe average reading value of " + dataRange + " sensors is " + csvData.getMeanValue(dataRange) + '\n');
+        try {
+            logger.logAndDisplay("\nThe average reading value of " + dataRange + " sensors is " + csvData.getMeanValue(dataRange) + '\n');
+        } catch (Exception e) {
+            logger.logAndDisplay("\nThere are no readings for " + dataRange + " sensors\n");
+        }
     }
 
     public static void subOp3MinVal(String dataRange, SensorData csvData) {

@@ -1,11 +1,11 @@
 package datatypes;
 
 public class Timestamp {
-    private int dayOfMonth;
-    private int monthOfYear;
-    private int year;
-    private int hour;
-    private int minute;
+    private int dayOfMonth = 1;
+    private int monthOfYear = 1;
+    private int year = 0;
+    private int hour = 0;
+    private int minute = 0;
 
     public Timestamp (int dayOfMonth, int monthOfYear, int year, int hour, int minute) {
         if (dayOfMonth < 1 || dayOfMonth > 31) throw new IllegalArgumentException("Day must be within 1 to 31: " + dayOfMonth);
@@ -19,6 +19,16 @@ public class Timestamp {
         this.hour = hour;
         this.minute = minute;
     }
+
+    public Timestamp(Timestamp timestamp) {
+        dayOfMonth = timestamp.getDay();
+        monthOfYear = timestamp.getMonth();
+        year = timestamp.getYear();
+        hour = timestamp.getHour();
+        minute = timestamp.getMinute();
+    }
+
+    public Timestamp() {}
 
     public static Timestamp stringToTimestamp(String line) {
         String[] dataList = line.split(",");

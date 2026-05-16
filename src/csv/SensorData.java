@@ -9,16 +9,58 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import logger.Logger;
 
 
 public class SensorData {
-    SensorReading[] sensorReadings = new SensorReading[0];
-    String filePath = "";
-    private Logger logger = new Logger();
+    private SensorReading[] sensorReadings = new SensorReading[0];
+    private String filePath = "";
 
+    // ------------------CONSTRUCTORS--------------------
     public SensorData(String filePath) {
         this.filePath = filePath;
+        readCsv(filePath);
+    }
+
+    public SensorData (SensorData data) {
+        sensorReadings = data.getSensorReadings().clone();
+        filePath = data.getFilePath();
+    }
+
+    public SensorData(){}
+
+//-------------------SETTERS---------------------------------------
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+    public void setSensorReadings(SensorReading[] readings) {
+        sensorReadings = readings;
+    } 
+
+//-------------------GETTERS---------------------------------------
+    public SensorReading[] getSensorReadings() {
+        return sensorReadings;
+    }
+    public String getFilePath() {
+        return filePath;
+    }
+    public SensorReading get(int index) {
+        return sensorReadings[index];
+    }    
+
+
+//---------HELPERS---------------------
+
+    public final void append(SensorReading sensorReading) {
+        SensorReading[] newArr = new SensorReading[sensorReadings.length + 1];
+
+        for (int i = 0; i < sensorReadings.length; i++) {
+            newArr[i] = sensorReadings[i];
+        }
+        newArr[sensorReadings.length] = sensorReading;
+        sensorReadings = newArr;
+    }
+
+    public final void readCsv(String filePath) {
         try (FileInputStream fileStream = new FileInputStream(filePath);
             InputStreamReader isr = new InputStreamReader(fileStream);
             BufferedReader buffer = new BufferedReader(isr);
@@ -36,21 +78,7 @@ public class SensorData {
         }
     }
 
-    public final void append(SensorReading sensorReading) {
-        SensorReading[] newArr = new SensorReading[sensorReadings.length + 1];
-
-        for (int i = 0; i < sensorReadings.length; i++) {
-            newArr[i] = sensorReadings[i];
-        }
-        newArr[sensorReadings.length] = sensorReading;
-        sensorReadings = newArr;
-    }
-
-    public SensorReading get(int index) {
-        return sensorReadings[index];
-    }    
-
-
+// ---------------------STATISTICS------------------------------
     public int getTotalCount(String dataRange) {
         int count = 0;
         if (dataRange.equals("all")) return sensorReadings.length;
@@ -74,7 +102,7 @@ public class SensorData {
                     minVal = sensor.getValue();
             }
         }
-        if (first) throw new Exception("No readings for sensors of " + dataRange); // Catch this in menu to show user data doesn't exist. Cleaner than using neg since sensor data can be negative
+        if (first) throw new Exception("No readings for sensors of " + dataRange); // Catch this in menu to show user data doesn't exist. Cleaner than using -ve since sensor data can be negative
         return minVal;
     }
 
@@ -106,14 +134,6 @@ public class SensorData {
         return total / count;
     }
 
-    private boolean evaluateFilter(SensorReading sensor, String dataRange) {
-        if (dataRange.equals("all")){
-            return true;
-        }
-        return sensor.getSensorType().equals(dataRange) 
-            || sensor.getZone().equals(dataRange);
-    }
-
     public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws IllegalArgumentException {
 
         SensorReading newReading = new SensorReading(
@@ -142,7 +162,7 @@ public class SensorData {
             );
             append(newReading);
         } catch (IOException e) {
-            logger.logAndDisplay(e.getMessage());
+            System.out.println(e.getMessage());
         }
     }
 
@@ -186,9 +206,19 @@ public class SensorData {
             }
             buffWriter.write(data);
         } catch (IOException e) {
-            logger.logAndDisplay(e.getMessage());
+            System.out.println(e.getMessage());
         }
 
+    }
+
+
+// ----------------PRIVATE----------------
+    private boolean evaluateFilter(SensorReading sensor, String dataRange) {
+        if (dataRange.equals("all")){
+            return true;
+        }
+        return sensor.getSensorType().equals(dataRange) 
+            || sensor.getZone().equals(dataRange);
     }
 
 }

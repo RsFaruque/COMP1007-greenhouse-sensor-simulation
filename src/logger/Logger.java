@@ -6,7 +6,23 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class Logger {
-    final String logfile = "src/logs.txt";
+    private String logfile = "";
+
+    public Logger(String logfile) {
+        this.logfile = logfile;
+    }
+    public Logger(Logger logger) {
+        logfile = logger.getLogFilePath();
+    }
+    public Logger(){}
+
+
+    public void setLogFilePath(String path) {
+        this.logfile = path;
+    }
+    public String getLogFilePath() {
+        return logfile;
+    }
 
     public void log(String obj) {
         try (
