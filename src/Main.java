@@ -1,5 +1,7 @@
 import businesslogic.SensorReadingRange;
 import csv.SensorData;
+import dataTypes.Timestamp;
+import java.util.Random;
 import java.util.Scanner;
 import logger.Logger;
 
@@ -10,7 +12,7 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean endProgram = false;
-        SensorData csvData = new SensorData("D:\\Curtin_university\\semester 1\\COMP1007\\Assignment\\src\\testData.csv");
+        SensorData csvData = new SensorData("D:\\Curtin_university\\semester 1\\COMP1007\\Assignment\\src\\testData2.csv");
         String state = "main";  // use this state to control which menu to display and when to reset dataRange;
         String dataRange = "";
 
@@ -26,14 +28,13 @@ public class Main {
                     + '\n' + "6. Exit program\n"
                 );
                 switch (getValidInputInRange(scanner, 1, 6)) {
-                    case 1 -> dataRange = "all";
-                    case 2 -> dataRange = selectZone(scanner);
-                    case 3 -> dataRange = selectSensorType(scanner);
-                    case 4 -> addData(scanner);
-                    case 5 -> deleteData(scanner);
-                    case 6 -> endProgram = true;
+                    case 1 -> {dataRange = "all"; state = "sub";}
+                    case 2 -> {dataRange = selectZone(scanner); state = "sub";}
+                    case 3 -> {dataRange = selectSensorType(scanner); state = "sub";}
+                    case 4 -> {addData(scanner, csvData);}
+                    case 5 -> {deleteData(scanner);}
+                    case 6 -> {endProgram = true;}
                 }    
-                state = "sub";    // once range is selected, change state to sub(menu)
 
             } else if (state.equals("sub")) {
                 logger.logAndDisplay("\nSelect a statistic:"
@@ -100,7 +101,7 @@ public class Main {
             + '\n' + "1. Temperature"
             + '\n' + "2. Humidity"
             + '\n' + "3. Soil Moiture"
-            + '\n' + "4. Light"
+            + '\n' + "4. Light\n"
         );
         return switch (getValidInputInRange(scanner, 1, 4)) {
             case 1 -> "temperature";
@@ -110,8 +111,60 @@ public class Main {
         };
     }
 
-    public static void addData(Scanner scanner) {
-        
+    public static void addData(Scanner scanner, SensorData csvData) {
+        logger.logAndDisplay("\nAdd data:\n");
+        String type = selectSensorType(scanner);
+        String zone = selectZone(scanner);
+
+        double value = 0.0;
+        boolean isValid = false;
+        do { 
+            try {
+                
+                logger.logAndDisplay("\nSensorReading value: ");
+                value = scanner.nextDouble();
+                isValid = true;
+            } catch (Exception e) {
+                logger.logAndDisplay("\nInvalid input for value");
+            }
+        } while (!isValid);        
+
+        isValid = false;
+        Timestamp timestamp = null;
+        do {
+            try {
+                logger.logAndDisplay("Enter day: ");
+                int day = scanner.nextInt(); 
+                logger.logAndDisplay("Enter month: ");
+                int month = scanner.nextInt();
+                logger.logAndDisplay("Enter year: ");
+                int year = scanner.nextInt();
+                logger.logAndDisplay("Enter hour: ");
+                int hour = scanner.nextInt();
+                logger.logAndDisplay("Enter minute: ");
+                int minute = scanner.nextInt();
+
+                timestamp = new Timestamp(day, month, year, hour, minute);
+                isValid = true;
+            } catch (IllegalArgumentException e) {
+                logger.logAndDisplay('\n' + e.getMessage());
+            }
+        } while(!isValid);
+
+        Random idDigit = new Random();
+        String sensorID = switch(type) {
+            case "temperature" -> "TMP";
+            case "soilMoisture" -> "SOIL";
+            case "humidity" -> "HMD";
+            case "light" -> "LGT";
+            default -> "";
+        };
+        sensorID += (idDigit.nextInt(900) + 100);
+        System.out.println("Debug -> " + (idDigit.nextInt(900) + 100));
+        System.out.println("Debug -> " + sensorID);
+
+        csvData.addData(sensorID, type, zone, value, timestamp);
+
     }
 
     public static void deleteData(Scanner scanner) {

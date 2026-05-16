@@ -71,20 +71,23 @@ public class SensorReading {
    
     // -------------------VALIDATION-----------------------
     public static String validateZone(String zone) throws IllegalArgumentException{
-        return compare(zoneList, zone, "Invalid zone: " + zone);
+        compare(zoneList, zone, "Invalid zone: " + zone);
+        return zone;
     }
 
     public static String validateSensorType(String sensor) throws IllegalArgumentException {
-        return compare(sensorTypeList, sensor, "Invalid sensor type: " + sensor);
+        compare(sensorTypeList, sensor, "Invalid sensor type: " + sensor);
+        return sensor;
     }
 
     public static String validateSensorID(String sensorID) throws IllegalArgumentException {
         String prefix = sensorID.substring(0,3);
         if (Character.isLetter(sensorID.charAt(3))) prefix += sensorID.charAt(3);
-        return compare(sensorPrefixes, prefix, "Invalid sensor ID: " + sensorID);
+        compare(sensorPrefixes, prefix, "Invalid sensor ID: " + sensorID);
+        return sensorID;
     }
 
-    private static String compare(String[] arr, String txt, String errMsg) throws IllegalArgumentException {
+    private static void compare(String[] arr, String txt, String errMsg) throws IllegalArgumentException {
         boolean isValid = false;
         for (int i = 0; i < arr.length; i++) {
             if (arr[i].equals(txt)) {
@@ -92,6 +95,5 @@ public class SensorReading {
             }
         }
         if (!isValid) throw new IllegalArgumentException(errMsg);
-        return txt;
     }
 }

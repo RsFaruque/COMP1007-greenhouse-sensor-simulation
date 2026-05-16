@@ -8,6 +8,11 @@ public class Timestamp {
     private int minute;
 
     public Timestamp (int dayOfMonth, int monthOfYear, int year, int hour, int minute) {
+        if (dayOfMonth < 1 || dayOfMonth > 31) throw new IllegalArgumentException("Day must be within 1 to 31: " + dayOfMonth);
+        if (monthOfYear < 1 || monthOfYear > 31) throw new IllegalArgumentException("Month must be within 1 to 12: " + monthOfYear);
+        if (year < 0 || year > 2026) throw new IllegalArgumentException("Year must be within 0 to 2026: " + year);
+        if (hour < 0 || hour > 23) throw new IllegalArgumentException("Year must be within 0 to 23: " + hour);
+        if (minute < 0 || minute > 59) throw new IllegalArgumentException("Minute must be within 0 to 59: " + minute);
         this.dayOfMonth = dayOfMonth;
         this.monthOfYear = monthOfYear; 
         this.year = year;
@@ -46,18 +51,23 @@ public class Timestamp {
     
     // SETTERS
     public void setDay(int day) {
+        if (day < 1 || day > 31) throw new IllegalArgumentException("Day must be within 1 to 31: " + day);
         dayOfMonth = day;
     }
     public void setMonth(int month) {
+        if (month < 1 || month > 31) throw new IllegalArgumentException("Month must be within 1 to 12: " + month);
         monthOfYear = month;
     }
     public void setYear(int year) {
+        if (year < 0 || year > 2026) throw new IllegalArgumentException("Year must be within 0 to 2026: " + year);
         this.year = year;
     }
     public void setHour(int hour) {
+        if (hour < 0 || hour > 23) throw new IllegalArgumentException("Year must be within 0 to 23: " + hour);
         this.hour = hour;
     }
     public void setMinute(int minute) {
+        if (minute < 0 || minute > 59) throw new IllegalArgumentException("Minute must be within 0 to 59: " + minute);
         this.minute = minute;
     }
 
