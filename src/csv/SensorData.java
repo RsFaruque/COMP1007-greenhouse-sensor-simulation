@@ -46,8 +46,14 @@ public class SensorData {
         sensorReadings = newArr;
     }
 
+    public SensorReading get(int index) {
+        return sensorReadings[index];
+    }    
+
+
     public int getTotalCount(String dataRange) {
         int count = 0;
+        if (dataRange.equals("all")) return sensorReadings.length;
         for (int i = 0; i < sensorReadings.length; i++) {
             if (evaluateFilter(sensorReadings[i], dataRange)) {
                 count++;
