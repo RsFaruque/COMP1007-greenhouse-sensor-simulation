@@ -1,6 +1,5 @@
 package dataTypes;
 
-import java.security.InvalidParameterException;
 
 public class SensorReading {
     private String sensorID;
@@ -8,11 +7,13 @@ public class SensorReading {
     private String zone;
     private double value;
     private Timestamp timestamp;
-    public final String[] sensorTypes = {"temperature", "soilMoiture", "humidity", "light"};
-    public final String[] sensorPrefix = {"TMP", "SOIL", "HMD", "LGT"};
 
+    
+    public static final String[] sensorTypeList = {"temperature", "soilMoisture", "humidity", "light"};
+    public static final String[] sensorPrefixes = {"TMP", "SOIL", "HMD", "LGT"};
+    public static final String[] zoneList = {"ZoneA", "ZoneB", "ZoneC"};
 
-    public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) throws InvalidParameterException {
+    public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) throws IllegalArgumentException {
         this.sensorID = validateSensorID(sensorID);
         this.sensorType = validateSensorType(sensorType);
         this.zone = validateZone(zone);
@@ -20,7 +21,7 @@ public class SensorReading {
         this.timestamp = timestamp;
     }
 
-    public static SensorReading stringToSensorReading(String line) throws InvalidParameterException {
+    public static SensorReading stringToSensorReading(String line) throws IllegalArgumentException {
         String[] data = line.split(",");
         return new SensorReading(
             data[5],  // sensorID
@@ -31,6 +32,7 @@ public class SensorReading {
         );
     }
 
+    // -------------------GETTERS AND SETTERS-----------------------
     public double getValue() {
         return value;
     }
@@ -66,33 +68,30 @@ public class SensorReading {
         timestamp = time;
     }
 
-
-    public static String validateZone(String zone) throws InvalidParameterException{
-        if (!(zone.equals("ZoneA")
-        || zone.equals("ZoneB")
-        || zone.equals("ZoneC"))) {
-            throw new InvalidParameterException("Zone is not one of ZoneA, ZoneB, ZoneC | Zone entered: " + zone);
-        }
-        return zone;
+   
+    // -------------------VALIDATION-----------------------
+    public static String validateZone(String zone) throws IllegalArgumentException{
+        return compare(zoneList, zone, "Invalid zone: " + zone);
     }
 
-    public static String validateSensorType(String sensor) throws InvalidParameterException {
-        if (!(sensor.equals("temperature")
-        || sensor.equals("humidity")
-        || sensor.equals("soilMoisture")
-        || sensor.equals("light"))) {
-            throw new InvalidParameterException("Invalid sensor type");
-        }
-        return sensor;
+    public static String validateSensorType(String sensor) throws IllegalArgumentException {
+        return compare(sensorTypeList, sensor, "Invalid sensor type: " + sensor);
     }
 
-    public static String validateSensorID(String sensorID) throws InvalidParameterException {
-        if (!(sensorID.substring(0,3).equals("TMP")    // checks the 3 character sensor ID
-        || sensorID.substring(0,3).equals("HMD")
-        || sensorID.substring(0,3).equals("LGT")
-        || sensorID.substring(0,4).equals("SOIL"))) {
-            throw new InvalidParameterException("Invalid sensor ID");
-        } 
-        return sensorID;
+    public static String validateSensorID(String sensorID) throws IllegalArgumentException {
+        String prefix = sensorID.substring(0,3);
+        if (Character.isLetter(sensorID.charAt(3))) prefix += sensorID.charAt(3);
+        return compare(sensorPrefixes, prefix, "Invalid sensor ID: " + sensorID);
+    }
+
+    private static String compare(String[] arr, String txt, String errMsg) throws IllegalArgumentException {
+        boolean isValid = false;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i].equals(txt)) {
+                isValid = true;
+            }
+        }
+        if (!isValid) throw new IllegalArgumentException(errMsg);
+        return txt;
     }
 }
