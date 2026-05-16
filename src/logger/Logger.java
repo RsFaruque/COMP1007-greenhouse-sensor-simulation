@@ -8,17 +8,20 @@ import java.io.OutputStreamWriter;
 public class Logger {
     private String logfile = "src/logs.txt";
 
-    public void log(Object obj) {
+    public void log(String obj) {
         try (
             FileOutputStream file = new FileOutputStream("src/logs.txt", true);
             OutputStreamWriter streamWriter = new OutputStreamWriter(file);
             BufferedWriter buffWriter = new BufferedWriter(streamWriter);
         ) {
-            buffWriter.write(obj.toString());
-            buffWriter.write("\n");
+            buffWriter.write(obj);
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        System.out.print(obj.toString());
+    }
+
+    public void logAndDisplay(String obj) {
+        log(obj);
+        System.out.print(obj);
     }
 }
