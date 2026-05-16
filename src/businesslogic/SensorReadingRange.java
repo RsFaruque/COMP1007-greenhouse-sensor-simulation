@@ -1,6 +1,6 @@
 package businesslogic;
 
-import dataTypes.SensorReading;
+import datatypes.SensorReading;
 import csv.SensorData;
 
 public class SensorReadingRange {

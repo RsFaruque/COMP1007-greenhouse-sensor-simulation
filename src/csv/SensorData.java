@@ -1,7 +1,7 @@
 package csv;
 
-import dataTypes.SensorReading;
-import dataTypes.Timestamp;
+import datatypes.SensorReading;
+import datatypes.Timestamp;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -15,6 +15,7 @@ import logger.Logger;
 public class SensorData {
     SensorReading[] sensorReadings = new SensorReading[0];
     String filePath = "";
+    private Logger logger = new Logger();
 
     public SensorData(String filePath) {
         this.filePath = filePath;
@@ -53,8 +54,8 @@ public class SensorData {
     public int getTotalCount(String dataRange) {
         int count = 0;
         if (dataRange.equals("all")) return sensorReadings.length;
-        for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange)) {
+        for (SensorReading sensor : sensorReadings) {
+            if (evaluateFilter(sensor, dataRange)) {
                 count++;
             }
         }
@@ -64,13 +65,13 @@ public class SensorData {
     public double getMinValue(String dataRange) throws Exception{
         double minVal = 0;
         boolean first = true;
-        for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange)) {
+        for (SensorReading sensor : sensorReadings) {
+            if (evaluateFilter(sensor, dataRange)) {
                 if (first) {
-                    minVal = sensorReadings[i].getValue();
+                    minVal = sensor.getValue();
                     first = false;
-                } else if (sensorReadings[i].getValue() < minVal)
-                    minVal = sensorReadings[i].getValue();
+                } else if (sensor.getValue() < minVal)
+                    minVal = sensor.getValue();
             }
         }
         if (first) throw new Exception("No readings for sensors of " + dataRange); // Catch this in menu to show user data doesn't exist. Cleaner than using neg since sensor data can be negative
@@ -80,13 +81,13 @@ public class SensorData {
     public double getMaxValue(String dataRange) throws Exception{
         double maxVal = 0;
         boolean first = true;
-        for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange)) {
+        for (SensorReading sensor : sensorReadings) {
+            if (evaluateFilter(sensor, dataRange)) {
                 if (first) {
-                    maxVal = sensorReadings[i].getValue();
+                    maxVal = sensor.getValue();
                     first = false;
-                } else if (sensorReadings[i].getValue() > maxVal)
-                    maxVal = sensorReadings[i].getValue();
+                } else if (sensor.getValue() > maxVal)
+                    maxVal = sensor.getValue();
             } 
         }
         if (first) throw new Exception("No readings for sensor of " + dataRange); // Catch this in menu to show data doesn't exit.
@@ -96,9 +97,9 @@ public class SensorData {
     public double getMeanValue(String dataRange) {
         double total = 0;
         int count = 0;
-        for (int i = 0; i < sensorReadings.length; i++) {
-            if (evaluateFilter(sensorReadings[i], dataRange)) {
-                total += sensorReadings[i].getValue();
+        for (SensorReading sensor : sensorReadings) {
+            if (evaluateFilter(sensor, dataRange)) {
+                total += sensor.getValue();
                 count++;
             }
         }
@@ -114,7 +115,7 @@ public class SensorData {
     }
 
     public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws IllegalArgumentException {
-        Logger logger = new Logger();
+
         SensorReading newReading = new SensorReading(
             sensorID,
             sensorType,
@@ -141,8 +142,53 @@ public class SensorData {
             );
             append(newReading);
         } catch (IOException e) {
-            logger.log(e.getMessage());
+            logger.logAndDisplay(e.getMessage());
         }
+    }
+
+    public void deleteData(String sensorID) throws Exception {
+        // Delete from file and shift array
+        boolean deleteSuccessful = false;
+        for (int i = 0; i < sensorReadings.length; i++) {
+            if (sensorReadings[i].getSensorID().equals(sensorID)) {
+                sensorReadings[i] = null;
+                deleteSuccessful = true;
+            }
+        }
+        if (!deleteSuccessful) throw new Exception("Deletion unsuccessful. So such sensor as " + sensorID);
+
+        SensorReading[] newSensorReadings = new SensorReading[sensorReadings.length-1];
+        int x = 0;
+        for (SensorReading sensor : sensorReadings) {
+            if (sensor != null) 
+                newSensorReadings[x++] = sensor;
+        }
+        sensorReadings = newSensorReadings;
+        
+        // Write the changes to csv file
+        try (
+            FileOutputStream file = new FileOutputStream(filePath);
+            OutputStreamWriter streamWriter = new OutputStreamWriter(file);
+            BufferedWriter buffWriter = new BufferedWriter(streamWriter);
+        ){
+            String data = "day,month,year,hour,minute,sensorID,sensorType,zone,value\n";
+            for (SensorReading sensor : sensorReadings) {
+                data += sensor.getTimestamp().getDay()
+                + "," + sensor.getTimestamp().getMonth()
+                + "," + sensor.getTimestamp().getYear()
+                + "," + sensor.getTimestamp().getHour()
+                + "," + sensor.getTimestamp().getMinute()
+                + "," + sensor.getSensorID()
+                + "," + sensor.getSensorType()
+                + "," + sensor.getZone()
+                + "," + sensor.getValue()
+                + '\n';
+            }
+            buffWriter.write(data);
+        } catch (IOException e) {
+            logger.logAndDisplay(e.getMessage());
+        }
+
     }
 
 }

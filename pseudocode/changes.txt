@@ -1,3 +1,0 @@
-1) Moved sensor reading from csv to dataTyoes to decouple and make it more generic
-   Moved Statistics from csv to businessLogic to make csv more generic and better organize package
-   

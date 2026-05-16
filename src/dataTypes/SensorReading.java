@@ -1,4 +1,4 @@
-package dataTypes;
+package datatypes;
 
 
 public class SensorReading {
@@ -89,8 +89,8 @@ public class SensorReading {
 
     private static void compare(String[] arr, String txt, String errMsg) throws IllegalArgumentException {
         boolean isValid = false;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i].equals(txt)) {
+        for (String x : arr) {
+            if (x.equals(txt)) {
                 isValid = true;
             }
         }

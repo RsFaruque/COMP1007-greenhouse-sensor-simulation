@@ -1,6 +1,7 @@
 import businesslogic.SensorReadingRange;
 import csv.SensorData;
-import dataTypes.Timestamp;
+import datatypes.SensorReading;
+import datatypes.Timestamp;
 import java.util.Random;
 import java.util.Scanner;
 import logger.Logger;
@@ -32,7 +33,7 @@ public class Main {
                     case 2 -> {dataRange = selectZone(scanner); state = "sub";}
                     case 3 -> {dataRange = selectSensorType(scanner); state = "sub";}
                     case 4 -> {addData(scanner, csvData);}
-                    case 5 -> {deleteData(scanner);}
+                    case 5 -> {deleteData(scanner, csvData);}
                     case 6 -> {endProgram = true;}
                 }    
 
@@ -44,7 +45,7 @@ public class Main {
                     + '\n' + "4. Maximum value"
                     + '\n' + "5. Number of readings outside safe range"
                     + '\n' + "6. Percentage of readings outside safe range"
-                    + '\n' + "7. All statisticsn"
+                    + '\n' + "7. All statistics"
                     + '\n' + "8. Go back to main menu\n"
                 );
                 switch(getValidInputInRange(scanner, 1, 8)) {
@@ -75,8 +76,9 @@ public class Main {
                 } else {
                     logger.logAndDisplay("Invalid input. Selection must be within range\n");
                 }
-            } catch (IllegalArgumentException e) {
-                logger.logAndDisplay("Invalid input. Must be an integer.");
+            } catch (Exception e) {
+                logger.logAndDisplay("Invalid input. Must be an integer.\n");
+                scanner.nextLine();
             }
         }
     }
@@ -126,6 +128,7 @@ public class Main {
                 isValid = true;
             } catch (Exception e) {
                 logger.logAndDisplay("\nInvalid input for value");
+                scanner.nextLine();
             }
         } while (!isValid);        
 
@@ -147,7 +150,11 @@ public class Main {
                 timestamp = new Timestamp(day, month, year, hour, minute);
                 isValid = true;
             } catch (IllegalArgumentException e) {
-                logger.logAndDisplay('\n' + e.getMessage());
+                logger.logAndDisplay('\n' + e.getMessage() + "\n");
+                scanner.nextLine();
+            } catch (Exception e2) {
+                logger.logAndDisplay("Input must be an int\n");
+                scanner.nextLine();
             }
         } while(!isValid);
 
@@ -158,17 +165,34 @@ public class Main {
             case "humidity" -> "HMD";
             case "light" -> "LGT";
             default -> "";
-        };
-        sensorID += (idDigit.nextInt(900) + 100);
-        System.out.println("Debug -> " + (idDigit.nextInt(900) + 100));
-        System.out.println("Debug -> " + sensorID);
+        } + (idDigit.nextInt(900) + 100);
 
         csvData.addData(sensorID, type, zone, value, timestamp);
 
     }
 
-    public static void deleteData(Scanner scanner) {
+    public static void deleteData(Scanner scanner, SensorData csvData) {
+        boolean validIdFormat = false;
+        String id = "";
+        do { 
+            logger.logAndDisplay("\nDelete sensor reading:");
+            logger.logAndDisplay("\nEnter sensor ID: ");
+            id = scanner.next();
+            logger.log(id + '\n'); // show input in log file
+            try {
+                id = SensorReading.validateSensorID(id);
+                validIdFormat = true;
+            } catch (IllegalArgumentException e) {
+                logger.logAndDisplay("Invalid sensor format: " + id);
+                scanner.nextLine();
+            }
+        } while (!validIdFormat);
 
+        try {
+            csvData.deleteData(id);
+        } catch (Exception e) {
+            logger.logAndDisplay("\n"+ e.getMessage() + '\n');
+        }
     }
 
 
