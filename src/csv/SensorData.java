@@ -1,15 +1,14 @@
 package csv;
 
+import dataTypes.SensorReading;
+import dataTypes.Timestamp;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.BufferedWriter;
-
-import dataTypes.Timestamp;
-import dataTypes.SensorReading;
 import logger.Logger;
 
 
@@ -63,7 +62,7 @@ public class SensorData {
     }
 
     public double getMinValue(String dataRange) throws Exception{
-        double minVal;
+        double minVal = 0;
         boolean first = true;
         for (int i = 0; i < sensorReadings.length; i++) {
             if (evaluateFilter(sensorReadings[i], dataRange)) {
@@ -79,9 +78,9 @@ public class SensorData {
     }
 
     public double getMaxValue(String dataRange) throws Exception{
-        double maxVal;
+        double maxVal = 0;
         boolean first = true;
-        for (int i = 0; i > sensorReadings.length; i++) {
+        for (int i = 0; i < sensorReadings.length; i++) {
             if (evaluateFilter(sensorReadings[i], dataRange)) {
                 if (first) {
                     maxVal = sensorReadings[i].getValue();
@@ -101,37 +100,20 @@ public class SensorData {
             if (evaluateFilter(sensorReadings[i], dataRange)) {
                 total += sensorReadings[i].getValue();
                 count++;
-                System.out.println("Debug -> count="+count+" total="+total);
             }
         }
         return total / count;
     }
 
-    public int getUnsafeReadingCount(String dataRange) {
-        int count = 0;
-        for (int i = 0; i < sensorReadings.length; i++) {
-            SensorReading sensor = sensorReadings[i];
-            if (evaluateFilter(sensor, dataRange)
-            && sensor.getValue() > sensor.getUpperBound()
-            || sensor.getValue() < sensor.getLowerBound()) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public double getUnsafeReadingPercent(String dataRange) {
-        return (double) getUnsafeReadingCount(dataRange) / sensorReadings.length * 100;
-    }
-
     private boolean evaluateFilter(SensorReading sensor, String dataRange) {
-        if (dataRange.equals("all"))
+        if (dataRange.equals("all")){
             return true;
+        }
         return sensor.getSensorType().equals(dataRange) 
             || sensor.getZone().equals(dataRange);
     }
 
-    public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws InvalidParameterException {
+    public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws IllegalArgumentException {
         Logger logger = new Logger();
         SensorReading newReading = new SensorReading(
             sensorID,

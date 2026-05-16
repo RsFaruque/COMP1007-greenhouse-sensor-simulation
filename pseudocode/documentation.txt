@@ -5,4 +5,10 @@ Statistics class:
 
     On the other hand, there are operations that are specific to the business or task, i.e. business logic. For example, unsafe sensor reading sets a threshhold and reports any reading that is above the said threshhold. This requirement is specific to this task and therefore should not be implemented as a part of the CsvData class.
 
+
+Main.java addData:
+    the program assumes that there are a total of 3 zones in the Greenhouse and a total of 5 different sensors. Therefore, the input validation accounts for value reading and the time stamp of the sensor. SensorType and Zone, since limited, can be prompted as menu the user has to choose from rather than direct String input. This assumption removes the need to create new custom validations for the menu and allows to recycle existing input validation methods. 
+
+
+
     
