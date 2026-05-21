@@ -1,0 +1,55 @@
+CLASS Logger
+
+    FIELDS:
+        logfile (STRING) = ""
+
+    CONSTRUCTOR Logger(logfile STRING):
+        SET this.logfile = logfile
+
+    CONSTRUCTOR Logger(logger Logger):
+        SET logfile = logger.getLogFilePath()
+
+    DEFAULT CONSTRUCTOR Logger():
+        (no action)
+
+
+    METHOD NAME: setLogFilePath
+    IMPORT: path (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        SET this.logfile = path
+    END METHOD
+
+
+    METHOD NAME: getLogFilePath
+    IMPORT: NONE
+    EXPORT: logfile (STRING)
+    BEGIN METHOD:
+        EXPORT logfile
+    END METHOD
+
+
+    METHOD NAME: log
+    IMPORT: obj (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            OPEN logfile IN APPEND MODE AS file
+            WRAP file IN OutputStreamWriter AS streamWriter
+            WRAP streamWriter IN BufferedWriter AS buffWriter
+            WRITE obj TO buffWriter
+            CLOSE ALL STREAMS
+        CATCH IOException:
+            DISPLAY THE ERROR MESSAGE
+    END METHOD
+
+
+    METHOD NAME: logAndDisplay
+    IMPORT: obj (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        CALL log(obj)
+        PRINT obj TO CONSOLE
+    END METHOD
+
+END CLASS

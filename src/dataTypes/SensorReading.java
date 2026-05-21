@@ -8,11 +8,6 @@ public class SensorReading {
     private double value = 0;
     private Timestamp timestamp = new Timestamp();
 
-    
-    public static final String[] sensorTypeList = {"temperature", "soilMoisture", "humidity", "light"};
-    public static final String[] sensorPrefixes = {"TMP", "SOIL", "HMD", "LGT"};
-    public static final String[] zoneList = {"ZoneA", "ZoneB", "ZoneC"};
-
     public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) throws IllegalArgumentException {
         // check if sensor type is a valid option
         if (

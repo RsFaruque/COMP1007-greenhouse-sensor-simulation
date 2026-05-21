@@ -1,0 +1,145 @@
+CLASS Timestamp
+
+    FIELDS:
+        dayOfMonth  (INTEGER) = 1
+        monthOfYear (INTEGER) = 1
+        year        (INTEGER) = 0
+        hour        (INTEGER) = 0
+        minute      (INTEGER) = 0
+
+    CONSTRUCTOR Timestamp(dayOfMonth INTEGER, monthOfYear INTEGER, year INTEGER, hour INTEGER, minute INTEGER):
+        IF dayOfMonth < 1 OR dayOfMonth > 31:
+            THROW IllegalArgumentException "Day must be within 1 to 31: <dayOfMonth>"
+        IF monthOfYear < 1 OR monthOfYear > 12:
+            THROW IllegalArgumentException "Month must be within 1 to 12: <monthOfYear>"
+        IF dayOfMonth > getDaysInMonth(monthOfYear):
+            THROW IllegalArgumentException "<month name> can only have <getDaysInMonth(monthOfYear)> days"
+        IF year < 0 OR year > 2026:
+            THROW IllegalArgumentException "Year must be within 0 to 2026: <year>"
+        IF hour < 0 OR hour > 23:
+            THROW IllegalArgumentException "Hour must be within 0 to 23: <hour>"
+        IF minute < 0 OR minute > 59:
+            THROW IllegalArgumentException "Minute must be within 0 to 59: <minute>"
+        SET this.dayOfMonth  = dayOfMonth
+        SET this.monthOfYear = monthOfYear
+        SET this.year        = year
+        SET this.hour        = hour
+        SET this.minute      = minute
+
+    CONSTRUCTOR Timestamp(timestamp Timestamp):
+        SET dayOfMonth  = timestamp.getDay()
+        SET monthOfYear = timestamp.getMonth()
+        SET year        = timestamp.getYear()
+        SET hour        = timestamp.getHour()
+        SET minute      = timestamp.getMinute()
+
+    DEFAULT CONSTRUCTOR Timestamp():
+        (no action)
+
+
+    METHOD NAME: stringToTimestamp  [STATIC]
+    IMPORT: line (STRING)
+    EXPORT: Timestamp
+    BEGIN METHOD:
+        SPLIT line BY "," INTO dataList (STRING ARRAY)
+        EXPORT NEW Timestamp USING:
+            dataList[0] AS day
+            dataList[1] AS month
+            dataList[2] AS year
+            dataList[3] AS hour
+            dataList[4] AS minute
+    END METHOD
+
+
+    // ---------- GETTERS ----------
+
+    METHOD NAME: getDay    EXPORT: dayOfMonth  (INTEGER)
+    METHOD NAME: getMonth  EXPORT: monthOfYear (INTEGER)
+    METHOD NAME: getYear   EXPORT: year        (INTEGER)
+    METHOD NAME: getHour   EXPORT: hour        (INTEGER)
+    METHOD NAME: getMinute EXPORT: minute      (INTEGER)
+
+
+    // ---------- SETTERS ----------
+
+    METHOD NAME: setDay
+    IMPORT: day (INTEGER)
+    EXPORT: NULL
+    BEGIN METHOD:
+        IF day < 1 OR day > 31:
+            THROW IllegalArgumentException "Day must be within 1 to 31: <day>"
+        IF day > getDaysInMonth(monthOfYear):
+            THROW IllegalArgumentException "<month name> can only have <getDaysInMonth(monthOfYear)> days"
+        SET dayOfMonth = day
+    END METHOD
+
+    METHOD NAME: setMonth
+    IMPORT: month (INTEGER)
+    EXPORT: NULL
+    BEGIN METHOD:
+        IF month < 1 OR month > 12:
+            THROW IllegalArgumentException "Month must be within 1 to 12: <month>"
+        SET monthOfYear = month
+    END METHOD
+
+    METHOD NAME: setYear
+    IMPORT: year (INTEGER)
+    EXPORT: NULL
+    BEGIN METHOD:
+        IF year < 0 OR year > 2026:
+            THROW IllegalArgumentException "Year must be within 0 to 2026: <year>"
+        SET this.year = year
+    END METHOD
+
+    METHOD NAME: setHour
+    IMPORT: hour (INTEGER)
+    EXPORT: NULL
+    BEGIN METHOD:
+        IF hour < 0 OR hour > 23:
+            THROW IllegalArgumentException "Hour must be within 0 to 23: <hour>"
+        SET this.hour = hour
+    END METHOD
+
+    METHOD NAME: setMinute
+    IMPORT: minute (INTEGER)
+    EXPORT: NULL
+    BEGIN METHOD:
+        IF minute < 0 OR minute > 59:
+            THROW IllegalArgumentException "Minute must be within 0 to 59: <minute>"
+        SET this.minute = minute
+    END METHOD
+
+
+    // ---------- PRIVATE HELPERS ----------
+
+    METHOD NAME: getDaysInMonth  [PRIVATE]
+    IMPORT: month (INTEGER)
+    EXPORT: INTEGER
+    BEGIN METHOD:
+        IF month IN {1, 3, 5, 7, 8, 10, 12}: EXPORT 31
+        IF month IN {4, 6, 9, 11}:            EXPORT 30
+        IF month == 2:                         EXPORT 28
+        DEFAULT:                               EXPORT 0
+    END METHOD
+
+    METHOD NAME: intToStrMonth  [PRIVATE]
+    IMPORT: month (INTEGER)
+    EXPORT: STRING
+    BEGIN METHOD:
+        MATCH month:
+            1  -> EXPORT "january"
+            2  -> EXPORT "february"
+            3  -> EXPORT "march"
+            4  -> EXPORT "april"
+            5  -> EXPORT "may"
+            6  -> EXPORT "june"
+            7  -> EXPORT "july"
+            8  -> EXPORT "august"
+            9  -> EXPORT "september"
+            10 -> EXPORT "october"
+            11 -> EXPORT "november"
+            12 -> EXPORT "december"
+            DEFAULT -> THROW IllegalArgumentException "This month doesn't exist"
+    END METHOD
+
+END CLASS

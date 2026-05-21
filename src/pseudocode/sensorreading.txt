@@ -1,0 +1,130 @@
+CLASS SensorReading
+
+    FIELDS:
+        sensorID   (STRING) = "UNK"
+        sensorType (STRING) = "unknown"
+        zone       (STRING) = "unknown"
+        value      (DOUBLE) = 0
+        timestamp  (Timestamp) = NEW DEFAULT Timestamp OBJECT
+
+    CONSTANTS:
+        sensorTypeList (STRING ARRAY) = {"temperature", "soilMoisture", "humidity", "light"}
+        sensorPrefixes (STRING ARRAY) = {"TMP", "SOIL", "HMD", "LGT"}
+        zoneList       (STRING ARRAY) = {"ZoneA", "ZoneB", "ZoneC"}
+
+
+    CONSTRUCTOR SensorReading(sensorID STRING, sensorType STRING, zone STRING, value DOUBLE, timestamp Timestamp):
+        IF sensorType IS NOT ONE OF "temperature", "humidity", "soilMoisture", "light":
+            THROW IllegalArgumentException "Invalid sensor type: <sensorType>"
+        SET this.sensorID = validateSensorID(sensorID)
+        IF IDtoType(sensorID) != sensorType:
+            THROW IllegalArgumentException "Sensor ID and type do not match. ID=<sensorID>, type=<sensorType>, expected=<IDtoType(sensorID)>"
+        SET this.sensorType = sensorType
+        SET this.zone       = validateZone(zone)
+        SET this.value      = value
+        SET this.timestamp  = timestamp
+
+    CONSTRUCTOR SensorReading(sensor SensorReading):
+        SET sensorID   = sensor.getSensorID()
+        SET sensorType = sensor.getSensorType()
+        SET zone       = sensor.getZone()
+        SET value      = sensor.getValue()
+        SET timestamp  = NEW Timestamp USING sensor.getTimestamp()
+
+    DEFAULT CONSTRUCTOR SensorReading():
+        (no action)
+
+
+    METHOD NAME: stringToSensorReading  [STATIC]
+    IMPORT: line (STRING)
+    EXPORT: SensorReading
+    BEGIN METHOD:
+        SPLIT line BY "," INTO data (STRING ARRAY)
+        EXPORT NEW SensorReading USING:
+            data[5] AS sensorID
+            data[6] AS sensorType
+            data[7] AS zone
+            data[8] PARSED AS DOUBLE AS value
+            Timestamp.stringToTimestamp(line) AS timestamp
+    END METHOD
+
+
+    // ---------- GETTERS AND SETTERS ----------
+
+    METHOD NAME: getValue    EXPORT: value      (DOUBLE)
+    METHOD NAME: setValue    IMPORT: val (DOUBLE)   -> SET value = val
+    METHOD NAME: getSensorType EXPORT: sensorType (STRING)
+    METHOD NAME: getSensorID   EXPORT: sensorID   (STRING)
+
+    METHOD NAME: setSensorID
+    IMPORT: id (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        SET sensorID   = validateSensorID(id)
+        SET sensorType = IDtoType(id)
+    END METHOD
+
+    METHOD NAME: getZone   EXPORT: zone (STRING)
+
+    METHOD NAME: setZone
+    IMPORT: zone (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        SET this.zone = validateZone(zone)
+    END METHOD
+
+    METHOD NAME: getTimestamp  EXPORT: timestamp (Timestamp)
+    METHOD NAME: setTimestamp  IMPORT: time (Timestamp)  -> SET timestamp = time
+
+
+    // ---------- VALIDATION ----------
+
+    METHOD NAME: validateZone  [STATIC]
+    IMPORT: zone (STRING)
+    EXPORT: zone (STRING)
+    BEGIN METHOD:
+        IF zone IS NOT ONE OF "ZoneA", "ZoneB", "ZoneC":
+            THROW IllegalArgumentException "Invalid zone: <zone>"
+        EXPORT zone
+    END METHOD
+
+
+    METHOD NAME: validateSensorID  [STATIC]
+    IMPORT: sensorID (STRING)
+    EXPORT: sensorID (STRING)
+    BEGIN METHOD:
+        IF LENGTH OF sensorID != 6:
+            THROW IllegalArgumentException "Invalid sensor ID: ID must be 6 characters long. Passed: <sensorID>"
+        IF IDtoType(sensorID) == "unknown":
+            THROW IllegalArgumentException "Invalid ID prefix: <sensorID>"
+
+        prefix (STRING) = FIRST 3 CHARACTERS OF sensorID
+        IF CHARACTER AT INDEX 3 OF sensorID IS A LETTER:
+            APPEND CHARACTER AT INDEX 3 TO prefix
+        suffix (STRING) = sensorID FROM INDEX prefix.length TO END
+
+        FOR EACH CHARACTER IN suffix:
+            IF CHARACTER IS NOT A DIGIT:
+                THROW IllegalArgumentException "Invalid sensor ID: ID digits cannot contain letters. Passed: <sensorID>"
+
+        EXPORT sensorID
+    END METHOD
+
+
+    METHOD NAME: IDtoType  [STATIC]
+    IMPORT: id (STRING)
+    EXPORT: STRING
+    BEGIN METHOD:
+        prefix (STRING) = FIRST 3 CHARACTERS OF id
+        IF CHARACTER AT INDEX 3 OF id IS A LETTER:
+            APPEND CHARACTER AT INDEX 3 TO prefix
+
+        MATCH prefix:
+            "TMP"  -> EXPORT "temperature"
+            "HMD"  -> EXPORT "humidity"
+            "LGT"  -> EXPORT "light"
+            "SOIL" -> EXPORT "soilMoisture"
+            DEFAULT -> EXPORT "unknown"
+    END METHOD
+
+END CLASS

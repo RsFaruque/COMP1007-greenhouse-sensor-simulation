@@ -1,0 +1,59 @@
+CLASS SensorReadingRange
+
+    METHOD NAME: inUnsafeRange
+    IMPORT: sensor (SensorReading)
+    EXPORT: BOOLEAN  (THROWS IllegalArgumentException)
+    BEGIN METHOD:
+        MATCH sensor.getSensorType():
+            "temperature":
+                EXPORT (sensor.getValue() > 30 OR sensor.getValue() < 18)
+            "soilMoisture":
+                EXPORT (sensor.getValue() > 60 OR sensor.getValue() < 30)
+            "humidity":
+                EXPORT (sensor.getValue() > 70 OR sensor.getValue() < 40)
+            "light":
+                EXPORT (sensor.getValue() > 1200 OR sensor.getValue() < 300)
+            DEFAULT:
+                THROW IllegalArgumentException "Invalid sensor type"
+    END METHOD
+
+
+    METHOD NAME: unsafeReadingCount
+    IMPORT: data (SensorData), dataRange (STRING)
+    EXPORT: count (INTEGER)  (THROWS Exception)
+    BEGIN METHOD:
+        total (INTEGER) = data.getTotalCount("all")
+        IF total == 0:
+            THROW Exception "There are no readings"
+        count (INTEGER) = 0
+        FOR i FROM 0 TO total - 1:
+            sensor (SensorReading) = data.get(i)
+            IF dataRange == "all"
+               OR sensor.getSensorType() == dataRange
+               OR sensor.getZone() == dataRange:
+                IF inUnsafeRange(sensor):
+                    INCREMENT count BY 1
+        EXPORT count
+    END METHOD
+
+
+    METHOD NAME: unsafeReadingPercent
+    IMPORT: data (SensorData), dataRange (STRING)
+    EXPORT: DOUBLE  (THROWS Exception)
+    BEGIN METHOD:
+        count (INTEGER) = 0
+        total (INTEGER) = 0
+        FOR i FROM 0 TO data.getTotalCount("all") - 1:
+            sensor (SensorReading) = data.get(i)
+            IF dataRange == "all"
+               OR sensor.getSensorType() == dataRange
+               OR sensor.getZone() == dataRange:
+                IF inUnsafeRange(data.get(i)):
+                    INCREMENT count BY 1
+                INCREMENT total BY 1
+        IF total == 0:
+            THROW Exception "There are no readings."
+        EXPORT (count / total) * 100
+    END METHOD
+
+END CLASS

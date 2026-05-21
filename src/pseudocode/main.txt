@@ -1,0 +1,304 @@
+CLASS Main
+    CREATE A Logger OBJECT CALLED logger WITH PATH "src/logs.txt"
+ 
+ 
+    BEGIN main
+        scanner (Scanner) = NEW Scanner OBJECT
+        endProgram (BOOLEAN) = false
+        sensorRange (SensorReadingRange) = NEW SensorReadingRange OBJECT
+        csvData (SensorData) = NEW DEFAULT SensorData OBJECT
+ 
+        TRY:
+            DISPLAY AND LOG "Enter path to csv: "
+            csvData = NEW SensorData OBJECT USING NEXT WORD FROM scanner AS PATH
+        CATCH IOException:
+            DISPLAY AND LOG "An error occurred. Instantiating a SensorData object at <WORKING DIRECTORY>/data.csv"
+            TRY:
+                CREATE FILE AT <WORKING DIRECTORY>/data.csv (OVERWRITE MODE)
+                WRITE "day,month,year,hour,minute,sensorID,sensorType,zone,value" + NEWLINE TO FILE
+                csvData = NEW SensorData OBJECT USING <WORKING DIRECTORY>/data.csv AS PATH
+                CLOSE FILE
+            CATCH IOException:
+                (DO NOTHING)
+ 
+
+        dataRange (STRING) = ""
+ 
+        WHILE NOT endProgram:
+                DISPLAY AND LOG
+                    "Welcome to the Smart greenhouse Monitoring System.
+                    Please select an option:
+                    1. Statistics for the entire greenhouse
+                    2. Statistics by zone
+                    3. Statistics by sensor type
+                    4. Add data readings
+                    5. Delete data readings
+                    6. Exit program"
+ 
+                choice = GET VALID INPUT USING getValidInputInRange(scanner, 1, 6)
+                IF:
+                    CASE 1:
+                        dataRange = "all"
+                    CASE 2:
+                        dataRange = selectZone(scanner)
+                    CASE 3:
+                        dataRange = selectSensorType(scanner)
+                    CASE 4:
+                        addData(scanner, csvData)
+                    CASE 5:
+                        deleteData(scanner, csvData)
+                    CASE 6:
+                        endProgram = true
+ 
+            IF dataRange != "":
+                DISPLAY AND LOG
+                    "Select a statistic:
+                    1. Total number of readings
+                    2. Average value
+                    3. Minimum value
+                    4. Maximum value
+                    5. Number of readings outside safe range
+                    6. Percentage of readings outside safe range
+                    7. All statistics"
+ 
+                choice = GET VALID INPUT USING getValidInputInRange(scanner, 1, 8)
+                IF:
+                    CASE 1: subOp1TotalCount(dataRange, csvData)
+                    CASE 2: subOp2MeanVal(dataRange, csvData)
+                    CASE 3: subOp3MinVal(dataRange, csvData)
+                    CASE 4: subOp4MaxVal(dataRange, csvData)
+                    CASE 5: subOp5UnsafeCount(dataRange, csvData, sensorRange)
+                    CASE 6: subOp6UnsafePercentage(dataRange, csvData, sensorRange)
+                    CASE 7: subOp7AllStat(dataRange, csvData, sensorRange)
+ 
+            dataRange = ""
+        END WHILE
+    END main
+ 
+ 
+    // -------------------- HELPERS --------------------
+ 
+    METHOD NAME: getValidInputInRange
+    IMPORT: scanner (Scanner), start (INTEGER), end (INTEGER)
+    EXPORT: INTEGER
+    BEGIN METHOD:
+        WHILE true:
+            TRY:
+                DISPLAY AND LOG "Enter your choice: "
+                choice (INTEGER) = GET INTEGER FROM scanner
+                LOG choice
+ 
+                IF choice >= start AND choice <= end:
+                    EXPORT choice
+                ELSE:
+                    DISPLAY AND LOG "Invalid input. Selection must be within range"
+            CATCH ANY EXCEPTION:
+                DISPLAY AND LOG "Invalid input. Must be an integer."
+                CLEAR THE SCANNER BUFFER
+        END WHILE
+    END METHOD
+ 
+ 
+    // -------------------- MAIN MENU OPTIONS --------------------
+ 
+    METHOD NAME: selectZone
+    IMPORT: scanner (Scanner)
+    EXPORT: zone (STRING)
+    BEGIN METHOD:
+        DISPLAY AND LOG
+            "Select one of the following zones:
+            1. ZoneA
+            2. ZoneB
+            3. ZoneC"
+ 
+        choice = GET VALID INPUT USING getValidInputInRange(scanner, 1, 3)
+        IF:
+            CASE 1: EXPORT "ZoneA"
+            CASE 2: EXPORT "ZoneB"
+            CASE 3: EXPORT "ZoneC"
+    END METHOD
+ 
+ 
+    METHOD NAME: selectSensorType
+    IMPORT: scanner (Scanner)
+    EXPORT: sensorType (STRING)
+    BEGIN METHOD:
+        DISPLAY AND LOG
+            "Select sensor type:
+            1. Temperature
+            2. Humidity
+            3. Soil Moisture
+            4. Light"
+ 
+        choice = GET VALID INPUT USING getValidInputInRange(scanner, 1, 4)
+        IF:
+            CASE 1: EXPORT "temperature"
+            CASE 2: EXPORT "humidity"
+            CASE 3: EXPORT "soilMoisture"
+            CASE 4: EXPORT "light"
+    END METHOD
+ 
+ 
+    METHOD NAME: addData
+    IMPORT: scanner (Scanner), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        DISPLAY AND LOG "Add data:"
+        type (STRING) = GET VALID SENSOR TYPE USING selectSensorType(scanner)
+        zone (STRING) = GET VALID ZONE USING selectZone(scanner)
+ 
+        value (DOUBLE) = 0.0
+        isValid (BOOLEAN) = false
+        DO:
+            TRY:
+                DISPLAY AND LOG "Sensor Reading value: "
+                value = GET DOUBLE FROM scanner
+                isValid = true
+            CATCH ANY EXCEPTION:
+                DISPLAY AND LOG "Invalid input for value"
+                CLEAR SCANNER BUFFER
+        WHILE NOT isValid
+ 
+        isValid = false
+        timestamp (Timestamp) = null
+        DO:
+            TRY:
+                DISPLAY AND LOG "Enter day: "
+                day (INTEGER) = GET INTEGER FROM scanner
+                DISPLAY AND LOG "Enter month: "
+                month (INTEGER) = GET INTEGER FROM scanner
+                DISPLAY AND LOG "Enter year: "
+                year (INTEGER) = GET INTEGER FROM scanner
+                DISPLAY AND LOG "Enter hour: "
+                hour (INTEGER) = GET INTEGER FROM scanner
+                DISPLAY AND LOG "Enter minute: "
+                minute (INTEGER) = GET INTEGER FROM scanner
+ 
+                timestamp = NEW Timestamp OBJECT USING day, month, year, hour, minute
+                isValid = true
+            CATCH IllegalArgumentException:
+                DISPLAY AND LOG THE ERROR MESSAGE FROM THE ERROR CAUGHT
+                CLEAR SCANNER BUFFER
+            CATCH ANY EXCEPTION:
+                DISPLAY AND LOG "Input must be an int"
+                CLEAR SCANNER BUFFER
+        WHILE NOT isValid
+ 
+        idDigit = NEW Random OBJECT
+        IF:
+            type == "temperature":  sensorID (STRING) = "TMP"
+            type == "soilMoisture": sensorID (STRING) = "SOIL"
+            type == "humidity":     sensorID (STRING) = "HMD"
+            type == "light":        sensorID (STRING) = "LGT"
+        sensorID = sensorID + A RANDOM INTEGER BETWEEN 100 AND 999 USING idDigit
+ 
+        CALL csvData.addData(sensorID, type, zone, value, timestamp)
+    END METHOD
+ 
+ 
+    METHOD NAME: deleteData
+    IMPORT: scanner (Scanner), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        validIdFormat (BOOLEAN) = false
+        id (STRING) = ""
+ 
+        DO:
+            DISPLAY AND LOG
+                "Delete sensor reading:
+                Enter sensor ID: "
+            id = GET NEXT WORD FROM scanner
+            LOG id
+            TRY:
+                id = SensorReading.validateSensorID(id)
+                validIdFormat = true
+            CATCH IllegalArgumentException:
+                DISPLAY AND LOG "Invalid sensor format: <id>"
+                CLEAR SCANNER BUFFER
+        WHILE NOT validIdFormat
+ 
+        TRY:
+            CALL csvData.deleteData(id)
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG THE ERROR MESSAGE FROM THE ERROR CAUGHT
+    END METHOD
+ 
+ 
+    // -------------------- SUB MENU OPTIONS --------------------
+ 
+    METHOD NAME: subOp1TotalCount
+    IMPORT: dataRange (STRING), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        DISPLAY AND LOG "Total number of <dataRange> sensor readings is <csvData.getTotalCount(dataRange)>"
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp2MeanVal
+    IMPORT: dataRange (STRING), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            DISPLAY AND LOG "The average reading value of <dataRange> sensors is <csvData.getMeanValue(dataRange)>"
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG "There are no readings for <dataRange> sensors"
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp3MinVal
+    IMPORT: dataRange (STRING), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            DISPLAY AND LOG "The lowest sensor reading of <dataRange> sensors is <csvData.getMinValue(dataRange)>"
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG "There are no readings for <dataRange> sensors"
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp4MaxVal
+    IMPORT: dataRange (STRING), csvData (SensorData)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            DISPLAY AND LOG "The largest sensor reading of <dataRange> sensors is <csvData.getMaxValue(dataRange)>"
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG "There are no readings for <dataRange> sensors"
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp5UnsafeCount
+    IMPORT: dataRange (STRING), csvData (SensorData), sensorRange (SensorReadingRange)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            DISPLAY AND LOG "<sensorRange.unsafeReadingCount(csvData, dataRange)> sensors of <dataRange> are outside the safe region"
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG "There are no readings."
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp6UnsafePercentage
+    IMPORT: dataRange (STRING), csvData (SensorData), sensorRange (SensorReadingRange)
+    EXPORT: NULL
+    BEGIN METHOD:
+        TRY:
+            DISPLAY AND LOG "<sensorRange.unsafeReadingPercent(csvData, dataRange)>% of the <dataRange> sensors are outside the safe region"
+        CATCH ANY EXCEPTION:
+            DISPLAY AND LOG "There are no readings."
+    END METHOD
+ 
+ 
+    METHOD NAME: subOp7AllStat
+    IMPORT: dataRange (STRING), csvData (SensorData), sensorRange (SensorReadingRange)
+    EXPORT: NULL
+    BEGIN METHOD:
+        subOp1TotalCount(dataRange, csvData)
+        subOp2MeanVal(dataRange, csvData)
+        subOp3MinVal(dataRange, csvData)
+        subOp4MaxVal(dataRange, csvData)
+        subOp5UnsafeCount(dataRange, csvData, sensorRange)
+        subOp6UnsafePercentage(dataRange, csvData, sensorRange)
+    END METHOD
+ 
+END CLASS

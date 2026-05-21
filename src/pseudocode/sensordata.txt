@@ -1,0 +1,258 @@
+CLASS SensorData
+
+    FIELDS:
+        sensorReadings (SensorReading ARRAY) = EMPTY ARRAY
+        filePath       (STRING) = ""
+        logger         (Logger) = NEW Logger OBJECT WITH PATH "src/logs.txt"
+
+
+    CONSTRUCTOR SensorData(filePath STRING):
+        SET this.filePath = filePath
+        CALL readCsv(filePath)
+
+    CONSTRUCTOR SensorData(data SensorData):
+        CREATE sensorReadings AS NEW ARRAY OF SIZE data.getSensorReadings().length
+        FOR i FROM 0 TO sensorReadings.length - 1:
+            SET sensorReadings[i] = NEW SensorReading USING data.get(i)
+        SET filePath = data.getFilePath()
+
+    DEFAULT CONSTRUCTOR SensorData():
+        (no action)
+
+
+    // ---------- SETTERS ----------
+
+    METHOD NAME: setFilePath
+    IMPORT: filePath (STRING)
+    EXPORT: NULL
+    BEGIN METHOD:
+        SET this.filePath = filePath
+    END METHOD
+
+    METHOD NAME: setSensorReadings
+    IMPORT: readings (SensorReading ARRAY)
+    EXPORT: NULL
+    BEGIN METHOD:
+        SET sensorReadings = readings
+    END METHOD
+
+
+    // ---------- GETTERS ----------
+
+    METHOD NAME: getSensorReadings
+    IMPORT: NONE
+    EXPORT: CLONE OF sensorReadings (SensorReading ARRAY)
+    BEGIN METHOD:
+        EXPORT A CLONE OF sensorReadings
+    END METHOD
+
+    METHOD NAME: getFilePath
+    IMPORT: NONE
+    EXPORT: filePath (STRING)
+    BEGIN METHOD:
+        EXPORT filePath
+    END METHOD
+
+    METHOD NAME: get
+    IMPORT: index (INTEGER)
+    EXPORT: SensorReading
+    BEGIN METHOD:
+        EXPORT sensorReadings[index]
+    END METHOD
+
+
+    // ---------- HELPERS ----------
+
+    METHOD NAME: append
+    IMPORT: sensorReading (SensorReading)
+    EXPORT: NULL
+    BEGIN METHOD:
+        CREATE newArr AS NEW ARRAY OF SIZE sensorReadings.length + 1
+        FOR i FROM 0 TO sensorReadings.length - 1:
+            SET newArr[i] = sensorReadings[i]
+        SET newArr[sensorReadings.length] = sensorReading
+        SET sensorReadings = newArr
+    END METHOD
+
+
+    METHOD NAME: readCsv
+    IMPORT: filePath (STRING)
+    EXPORT: NULL  (THROWS IOException)
+    BEGIN METHOD:
+        TRY:
+            OPEN filePath AS FileInputStream
+            WRAP IN InputStreamReader
+            WRAP IN BufferedReader AS buffer
+            READ AND DISCARD FIRST LINE (column headers)
+            line (STRING) = READ NEXT LINE FROM buffer
+            WHILE line IS NOT NULL:
+                TRY:
+                    CALL append(SensorReading.stringToSensorReading(line))
+                CATCH IllegalArgumentException:
+                    DISPLAY AND LOG "Record was not read -> <error message>"
+                line = READ NEXT LINE FROM buffer
+            CLOSE ALL STREAMS
+        CATCH IOException:
+            DISPLAY AND LOG THE ERROR MESSAGE
+            THROW IOException WITH THE SAME MESSAGE
+    END METHOD
+
+
+    // ---------- STATISTICS ----------
+
+    METHOD NAME: getTotalCount
+    IMPORT: dataRange (STRING)
+    EXPORT: count (INTEGER)
+    BEGIN METHOD:
+        IF dataRange == "all":
+            EXPORT sensorReadings.length
+        count (INTEGER) = 0
+        FOR EACH sensor IN sensorReadings:
+            IF evaluateFilter(sensor, dataRange):
+                INCREMENT count BY 1
+        EXPORT count
+    END METHOD
+
+
+    METHOD NAME: getMinValue
+    IMPORT: dataRange (STRING)
+    EXPORT: minVal (DOUBLE)  (THROWS Exception)
+    BEGIN METHOD:
+        IF sensorReadings.length == 0:
+            THROW Exception "There are no readings"
+        minVal (DOUBLE) = 0
+        first (BOOLEAN) = true
+        FOR EACH sensor IN sensorReadings:
+            IF evaluateFilter(sensor, dataRange):
+                IF first:
+                    SET minVal = sensor.getValue()
+                    SET first = false
+                ELSE IF sensor.getValue() < minVal:
+                    SET minVal = sensor.getValue()
+        IF first == true:
+            THROW Exception "No readings for sensors of <dataRange>"
+        EXPORT minVal
+    END METHOD
+
+
+    METHOD NAME: getMaxValue
+    IMPORT: dataRange (STRING)
+    EXPORT: maxVal (DOUBLE)  (THROWS Exception)
+    BEGIN METHOD:
+        IF sensorReadings.length == 0:
+            THROW Exception "There are no readings"
+        maxVal (DOUBLE) = 0
+        first (BOOLEAN) = true
+        FOR EACH sensor IN sensorReadings:
+            IF evaluateFilter(sensor, dataRange):
+                IF first:
+                    SET maxVal = sensor.getValue()
+                    SET first = false
+                ELSE IF sensor.getValue() > maxVal:
+                    SET maxVal = sensor.getValue()
+        IF first == true:
+            THROW Exception "No readings for sensor of <dataRange>"
+        EXPORT maxVal
+    END METHOD
+
+
+    METHOD NAME: getMeanValue
+    IMPORT: dataRange (STRING)
+    EXPORT: DOUBLE  (THROWS Exception)
+    BEGIN METHOD:
+        IF sensorReadings.length == 0:
+            THROW Exception "There are no readings."
+        sum (DOUBLE) = 0
+        count (INTEGER) = 0
+        FOR EACH sensor IN sensorReadings:
+            IF evaluateFilter(sensor, dataRange):
+                ADD sensor.getValue() TO sum
+                INCREMENT count BY 1
+        IF count == 0:
+            THROW Exception "There are no readings for <dataRange>"
+        EXPORT sum / count
+    END METHOD
+
+
+    METHOD NAME: addData
+    IMPORT: sensorID (STRING), sensorType (STRING), zone (STRING), value (DOUBLE), time (Timestamp)
+    EXPORT: NULL  (THROWS IllegalArgumentException)
+    BEGIN METHOD:
+        CREATE newReading (SensorReading) = NEW SensorReading USING sensorID, sensorType, zone, value, time
+
+        TRY:
+            OPEN filePath IN APPEND MODE AS file
+            WRAP IN OutputStreamWriter AS streamWriter
+            WRAP IN BufferedWriter AS buffWriter
+            WRITE TO buffWriter:
+                newReading.timestamp.day + "," +
+                newReading.timestamp.month + "," +
+                newReading.timestamp.year + "," +
+                newReading.timestamp.hour + "," +
+                newReading.timestamp.minute + "," +
+                newReading.sensorID + "," +
+                newReading.sensorType + "," +
+                newReading.zone + "," +
+                newReading.value + NEWLINE
+            CLOSE ALL STREAMS
+            CALL append(newReading)
+        CATCH IOException:
+            DISPLAY THE ERROR MESSAGE
+    END METHOD
+
+
+    METHOD NAME: deleteData
+    IMPORT: sensorID (STRING)
+    EXPORT: NULL  (THROWS Exception)
+    BEGIN METHOD:
+        deleteSuccessful (BOOLEAN) = false
+        FOR i FROM 0 TO sensorReadings.length - 1:
+            IF sensorReadings[i].getSensorID() == sensorID:
+                SET sensorReadings[i] = null
+                SET deleteSuccessful = true
+        IF NOT deleteSuccessful:
+            THROW Exception "Deletion unsuccessful. No such sensor as <sensorID>"
+
+        CREATE newSensorReadings AS NEW ARRAY OF SIZE sensorReadings.length - 1
+        x (INTEGER) = 0
+        FOR EACH sensor IN sensorReadings:
+            IF sensor IS NOT null:
+                SET newSensorReadings[x] = sensor
+                INCREMENT x BY 1
+        SET sensorReadings = newSensorReadings
+
+        TRY:
+            OPEN filePath IN OVERWRITE MODE AS file
+            WRAP IN OutputStreamWriter AS streamWriter
+            WRAP IN BufferedWriter AS buffWriter
+            data (STRING) = "day,month,year,hour,minute,sensorID,sensorType,zone,value" + NEWLINE
+            FOR EACH sensor IN sensorReadings:
+                APPEND TO data:
+                    sensor.timestamp.day + "," +
+                    sensor.timestamp.month + "," +
+                    sensor.timestamp.year + "," +
+                    sensor.timestamp.hour + "," +
+                    sensor.timestamp.minute + "," +
+                    sensor.sensorID + "," +
+                    sensor.sensorType + "," +
+                    sensor.zone + "," +
+                    sensor.value + NEWLINE
+            WRITE data TO buffWriter
+            CLOSE ALL STREAMS
+        CATCH IOException:
+            DISPLAY THE ERROR MESSAGE
+    END METHOD
+
+
+    // ---------- PRIVATE ----------
+
+    METHOD NAME: evaluateFilter  [PRIVATE]
+    IMPORT: sensor (SensorReading), dataRange (STRING)
+    EXPORT: BOOLEAN
+    BEGIN METHOD:
+        IF dataRange == "all":
+            EXPORT true
+        EXPORT (sensor.getSensorType() == dataRange OR sensor.getZone() == dataRange)
+    END METHOD
+
+END CLASS
