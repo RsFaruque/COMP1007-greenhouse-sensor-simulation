@@ -1,7 +1,7 @@
 package businesslogic;
 
-import datatypes.SensorReading;
 import csv.SensorData;
+import datatypes.SensorReading;
 
 public class SensorReadingRange {
     public boolean inUnsafeRange(SensorReading sensor) throws IllegalArgumentException {
@@ -14,18 +14,21 @@ public class SensorReadingRange {
         };
     }
 
-    public int unsafeReadingCount(SensorData data, String dataRange) {
+    public int unsafeReadingCount(SensorData data, String dataRange) throws Exception {
+        int total = data.getTotalCount("all");
+        if (total == 0) throw new Exception("There are no readings");
+
         int count = 0;
-        for (int i = 0; i < data.getTotalCount("all"); i++) {
+        for (int i = 0; i < total; i++) {
             SensorReading sensor = data.get(i);
             if (dataRange.equals("all") || sensor.getSensorType().equals(dataRange) || sensor.getZone().equals(dataRange)) {
-                if (inUnsafeRange(data.get(i))) count++;
+                if (inUnsafeRange(sensor)) count++;
             }
         }
         return count;
     }
 
-    public double unsafeReadingPercent(SensorData data, String dataRange) {
+    public double unsafeReadingPercent(SensorData data, String dataRange) throws Exception {
         int count = 0, total = 0;
         for (int i = 0; i < data.getTotalCount("all"); i++) {
             SensorReading sensor = data.get(i);
@@ -34,6 +37,7 @@ public class SensorReadingRange {
                 total++;
             }
         }
+        if (total == 0) throw new Exception("There are no readings.");
         return (double) count / total * 100;
     } 
 }

@@ -2,18 +2,42 @@ import businesslogic.SensorReadingRange;
 import csv.SensorData;
 import datatypes.SensorReading;
 import datatypes.Timestamp;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Random;
 import java.util.Scanner;
 import logger.Logger;
 
+
 public class Main {
-    static Logger logger = new Logger();
-    static SensorReadingRange sensorRange = new SensorReadingRange();
+    static Logger logger = new Logger("src/logs.txt");
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean endProgram = false;
-        SensorData csvData = new SensorData("D:\\Curtin_university\\semester 1\\COMP1007\\Assignment\\src\\testData2.csv");
+        SensorReadingRange sensorRange = new SensorReadingRange();
+        
+        SensorData csvData = new SensorData();
+        try {
+
+            csvData = new SensorData("D:\\Curtin_university\\semester 1\\COMP1007\\Assignment\\src\\testData2.csv");   
+        
+        } catch (IOException e) {
+            logger.logAndDisplay("\nAn error occured. Instantiating a SensorData object at" + System.getProperty("user.dir") + "/data.csv\n");
+            
+            try (
+                FileOutputStream file = new FileOutputStream(System.getProperty("user.dir") + "/data.csv");
+                OutputStreamWriter outStream = new OutputStreamWriter(file);
+                BufferedWriter bwriter = new BufferedWriter(outStream);
+            ){
+                bwriter.write("day,month,year,hour,minute,sensorID,sensorType,zone,value\n");
+                csvData = new SensorData(System.getProperty("user.dir") + "/data.csv");
+            } catch (IOException e1) {}
+        
+        }
+        
         String state = "main";  // use this state to control which menu to display and when to reset dataRange;
         String dataRange = "";
 
@@ -53,9 +77,9 @@ public class Main {
                     case 2 -> subOp2MeanVal(dataRange, csvData);
                     case 3 -> subOp3MinVal(dataRange, csvData);
                     case 4 -> subOp4MaxVal(dataRange, csvData);
-                    case 5 -> subOp5UnsafeCount(dataRange, csvData);
-                    case 6 -> subOp6UnsafePercentage(dataRange, csvData);
-                    case 7 -> subOp7AllStat(dataRange, csvData);
+                    case 5 -> subOp5UnsafeCount(dataRange, csvData, sensorRange);
+                    case 6 -> subOp6UnsafePercentage(dataRange, csvData, sensorRange);
+                    case 7 -> subOp7AllStat(dataRange, csvData, sensorRange);
                     case 8 -> {state = "main"; dataRange = "";}  // if dataRange is not changed, the previous selection remains when the user selects 4 or 5 in the main menu instead of the 1-3
                 }
             }
@@ -85,7 +109,7 @@ public class Main {
 
     // ---------- MAIN MENU OPTIONS -------------------------
     public static String selectZone(Scanner scanner) {
-        logger.logAndDisplay("\nSelect on of the following zones:"
+        logger.logAndDisplay("\nSelect one of the following zones:"
             + '\n' + "1. ZoneA"
             + '\n' + "2. ZoneB"
             + '\n' + "3. ZoneC"
@@ -123,7 +147,7 @@ public class Main {
         do { 
             try {
                 
-                logger.logAndDisplay("\nSensorReading value: ");
+                logger.logAndDisplay("\nSensor Reading value: ");
                 value = scanner.nextDouble();
                 isValid = true;
             } catch (Exception e) {
@@ -225,20 +249,28 @@ public class Main {
         }
     }
 
-    public static void subOp5UnsafeCount(String dataRange, SensorData csvData) {
-        logger.logAndDisplay("\n" + sensorRange.unsafeReadingCount(csvData, dataRange) + " sensors of " + dataRange + " are outside the safe region\n");
+    public static void subOp5UnsafeCount(String dataRange, SensorData csvData, SensorReadingRange sensorRange) {
+        try {
+            logger.logAndDisplay("\n" + sensorRange.unsafeReadingCount(csvData, dataRange) + " sensors of " + dataRange + " are outside the safe region\n");
+        } catch (Exception e) {
+            logger.logAndDisplay("\nThere are no readings.\n");
+        }
     }
 
-    public static void subOp6UnsafePercentage(String dataRange, SensorData csvData) {
-        logger.logAndDisplay("\n"+ sensorRange.unsafeReadingPercent(csvData, dataRange) + "% of the " + dataRange + " sensors are outside the safe region\n");
+    public static void subOp6UnsafePercentage(String dataRange, SensorData csvData, SensorReadingRange sensorRange) {
+        try{
+            logger.logAndDisplay("\n"+ sensorRange.unsafeReadingPercent(csvData, dataRange) + "% of the " + dataRange + " sensors are outside the safe region\n");
+        } catch (Exception e) {
+            logger.logAndDisplay("\nThere are no readings.\n");
+        }
     }
 
-    public static void  subOp7AllStat(String dataRange, SensorData csvData) {
+    public static void  subOp7AllStat(String dataRange, SensorData csvData, SensorReadingRange sensorRange) {
         subOp1TotalCount(dataRange, csvData);
         subOp2MeanVal(dataRange, csvData);
         subOp3MinVal(dataRange, csvData);
         subOp4MaxVal(dataRange, csvData);
-        subOp5UnsafeCount(dataRange, csvData);
-        subOp6UnsafePercentage(dataRange, csvData);
+        subOp5UnsafeCount(dataRange, csvData, sensorRange);
+        subOp6UnsafePercentage(dataRange, csvData, sensorRange);
     }
 }

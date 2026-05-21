@@ -9,20 +9,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import logger.Logger;
 
 
 public class SensorData {
     private SensorReading[] sensorReadings = new SensorReading[0];
     private String filePath = "";
+    Logger logger = new Logger("src/logs.txt");
 
     // ------------------CONSTRUCTORS--------------------
-    public SensorData(String filePath) {
+    public SensorData(String filePath) throws IOException {
         this.filePath = filePath;
         readCsv(filePath);
     }
 
     public SensorData (SensorData data) {
-        sensorReadings = data.getSensorReadings().clone();
+        sensorReadings = new SensorReading[data.getSensorReadings().length];
+        for (int i = 0; i < sensorReadings.length; i++) {
+            sensorReadings[i] = new SensorReading(data.get(i));
+        }        
         filePath = data.getFilePath();
     }
 
@@ -38,7 +43,7 @@ public class SensorData {
 
 //-------------------GETTERS---------------------------------------
     public SensorReading[] getSensorReadings() {
-        return sensorReadings;
+        return sensorReadings.clone();
     }
     public String getFilePath() {
         return filePath;
@@ -60,7 +65,7 @@ public class SensorData {
         sensorReadings = newArr;
     }
 
-    public final void readCsv(String filePath) {
+    public final void readCsv(String filePath) throws IOException {
         try (FileInputStream fileStream = new FileInputStream(filePath);
             InputStreamReader isr = new InputStreamReader(fileStream);
             BufferedReader buffer = new BufferedReader(isr);
@@ -68,13 +73,16 @@ public class SensorData {
             buffer.readLine();                 // remove column names
             String line = buffer.readLine();   // data starts from here
             while (line != null) {
-                append(SensorReading.stringToSensorReading(line));
+                try {
+                    append(SensorReading.stringToSensorReading(line));
+                } catch (IllegalArgumentException e) {
+                    logger.logAndDisplay("Record was not read -> " + e.getMessage() + '\n');
+                }
                 line = buffer.readLine();
             }
-            fileStream.close();
-
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            logger.logAndDisplay("\n" + e.getMessage() + "\n");
+            throw new IOException(e.getMessage());
         }
     }
 
@@ -91,6 +99,8 @@ public class SensorData {
     }
 
     public double getMinValue(String dataRange) throws Exception{
+        if (sensorReadings.length == 0) throw new Exception("There are no readings");
+
         double minVal = 0;
         boolean first = true;
         for (SensorReading sensor : sensorReadings) {
@@ -107,6 +117,8 @@ public class SensorData {
     }
 
     public double getMaxValue(String dataRange) throws Exception{
+        if (sensorReadings.length == 0) throw new Exception("There are no readings");
+
         double maxVal = 0;
         boolean first = true;
         for (SensorReading sensor : sensorReadings) {
@@ -118,20 +130,23 @@ public class SensorData {
                     maxVal = sensor.getValue();
             } 
         }
-        if (first) throw new Exception("No readings for sensor of " + dataRange); // Catch this in menu to show data doesn't exit.
+        if (first) throw new Exception("No readings for sensor of " + dataRange); // Catch this in menu to show data doesn't exist for this filter.
         return maxVal;
     }
 
-    public double getMeanValue(String dataRange) {
-        double total = 0;
+    public double getMeanValue(String dataRange) throws Exception{
+        if (sensorReadings.length == 0) throw new Exception ("There are no readings.");
+
+        double sum = 0;
         int count = 0;
         for (SensorReading sensor : sensorReadings) {
             if (evaluateFilter(sensor, dataRange)) {
-                total += sensor.getValue();
+                sum += sensor.getValue();
                 count++;
             }
         }
-        return total / count;
+        if (count == 0) throw new Exception ("There are no readings for " + dataRange);
+        return sum / count;
     }
 
     public void addData(String sensorID, String sensorType, String zone, double value, Timestamp time) throws IllegalArgumentException {
@@ -144,22 +159,34 @@ public class SensorData {
             time
         );
         try (
-            FileOutputStream file = new FileOutputStream(filePath, true);
+            FileOutputStream file = new FileOutputStream(filePath);
             OutputStreamWriter streamWriter = new OutputStreamWriter(file);
             BufferedWriter buffWriter = new BufferedWriter(streamWriter);
         ){
-            buffWriter.write(
-                "" + newReading.getTimestamp().getDay()
-                + ',' + newReading.getTimestamp().getMonth()
-                + ',' + newReading.getTimestamp().getYear()
-                + ',' + newReading.getTimestamp().getHour()
-                + ',' + newReading.getTimestamp().getMinute()
-                + ',' + newReading.getSensorID()
-                + ',' + newReading.getSensorType()
-                + ',' + newReading.getZone()
-                + ',' + newReading.getValue()
-                + '\n'
-            );
+            String data = "day,month,year,hour,minute,sensorID,sensorType,zone,value\n";
+            for (SensorReading sensor : sensorReadings) {
+                data += sensor.getTimestamp().getDay()
+                + "," + sensor.getTimestamp().getMonth()
+                + "," + sensor.getTimestamp().getYear()
+                + "," + sensor.getTimestamp().getHour()
+                + "," + sensor.getTimestamp().getMinute()
+                + "," + sensor.getSensorID()
+                + "," + sensor.getSensorType()
+                + "," + sensor.getZone()
+                + "," + sensor.getValue()
+                + '\n';
+            }
+            data += newReading.getTimestamp().getDay()
+            + "," + newReading.getTimestamp().getMonth()
+            + "," + newReading.getTimestamp().getYear()
+            + "," + newReading.getTimestamp().getHour()
+            + "," + newReading.getTimestamp().getMinute()
+            + "," + newReading.getSensorID()
+            + "," + newReading.getSensorType()
+            + "," + newReading.getZone()
+            + "," + newReading.getValue()
+            + '\n';
+            buffWriter.write(data);
             append(newReading);
         } catch (IOException e) {
             System.out.println(e.getMessage());

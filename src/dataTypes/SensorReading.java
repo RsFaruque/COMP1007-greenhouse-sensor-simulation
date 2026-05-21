@@ -26,7 +26,7 @@ public class SensorReading {
         sensorType = sensor.getSensorType();
         zone = sensor.getZone();
         value = sensor.getValue();
-        timestamp = sensor.getTimestamp();
+        timestamp = new Timestamp(sensor.getTimestamp());
     }
 
     public SensorReading() {}
@@ -69,7 +69,7 @@ public class SensorReading {
         return zone;
     }
     public void setZone(String zone) {
-        this.zone = zone;
+        this.zone = validateZone(zone);
     }
 
     public Timestamp getTimestamp() {
@@ -92,9 +92,23 @@ public class SensorReading {
     }
 
     public static String validateSensorID(String sensorID) throws IllegalArgumentException {
+        if (sensorID.length() != 6) {
+            throw new IllegalArgumentException("Invalid sensor ID: ID must be 6 characters long. Passed: " + sensorID);
+        }
+
+        // Test prefix
         String prefix = sensorID.substring(0,3);
         if (Character.isLetter(sensorID.charAt(3))) prefix += sensorID.charAt(3);
-        compare(sensorPrefixes, prefix, "Invalid sensor ID: " + sensorID);
+        compare(sensorPrefixes, prefix, "Invalid sensor ID: Invalid sensor prefix. Passed: " + sensorID);
+
+        // Test number
+        String suffix = sensorID.substring(prefix.length());
+
+        for (int i = 0; i < suffix.length(); i++) {
+            if (!Character.isDigit(suffix.charAt(i)))
+                throw new IllegalArgumentException("Invalid sensor ID: ID digits cannot contain letters. Passed: " + sensorID);
+        }
+
         return sensorID;
     }
 
