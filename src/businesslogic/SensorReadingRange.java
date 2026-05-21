@@ -13,6 +13,7 @@ public class SensorReadingRange {
             default -> throw new IllegalArgumentException("Invalid sensor type");
         };
     }
+    
 
     public int unsafeReadingCount(SensorData data, String dataRange) throws Exception {
         int total = data.getTotalCount("all");
@@ -27,6 +28,7 @@ public class SensorReadingRange {
         }
         return count;
     }
+
 
     public double unsafeReadingPercent(SensorData data, String dataRange) throws Exception {
         int count = 0, total = 0;

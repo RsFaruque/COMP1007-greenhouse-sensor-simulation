@@ -159,24 +159,11 @@ public class SensorData {
             time
         );
         try (
-            FileOutputStream file = new FileOutputStream(filePath);
+            FileOutputStream file = new FileOutputStream(filePath, true);
             OutputStreamWriter streamWriter = new OutputStreamWriter(file);
             BufferedWriter buffWriter = new BufferedWriter(streamWriter);
         ){
-            String data = "day,month,year,hour,minute,sensorID,sensorType,zone,value\n";
-            for (SensorReading sensor : sensorReadings) {
-                data += sensor.getTimestamp().getDay()
-                + "," + sensor.getTimestamp().getMonth()
-                + "," + sensor.getTimestamp().getYear()
-                + "," + sensor.getTimestamp().getHour()
-                + "," + sensor.getTimestamp().getMinute()
-                + "," + sensor.getSensorID()
-                + "," + sensor.getSensorType()
-                + "," + sensor.getZone()
-                + "," + sensor.getValue()
-                + '\n';
-            }
-            data += newReading.getTimestamp().getDay()
+            buffWriter.write(newReading.getTimestamp().getDay()
             + "," + newReading.getTimestamp().getMonth()
             + "," + newReading.getTimestamp().getYear()
             + "," + newReading.getTimestamp().getHour()
@@ -185,8 +172,7 @@ public class SensorData {
             + "," + newReading.getSensorType()
             + "," + newReading.getZone()
             + "," + newReading.getValue()
-            + '\n';
-            buffWriter.write(data);
+            + '\n');
             append(newReading);
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -202,7 +188,7 @@ public class SensorData {
                 deleteSuccessful = true;
             }
         }
-        if (!deleteSuccessful) throw new Exception("Deletion unsuccessful. So such sensor as " + sensorID);
+        if (!deleteSuccessful) throw new Exception("Deletion unsuccessful. No such sensor as " + sensorID);
 
         SensorReading[] newSensorReadings = new SensorReading[sensorReadings.length-1];
         int x = 0;

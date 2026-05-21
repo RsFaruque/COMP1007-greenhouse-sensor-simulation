@@ -14,8 +14,22 @@ public class SensorReading {
     public static final String[] zoneList = {"ZoneA", "ZoneB", "ZoneC"};
 
     public SensorReading (String sensorID, String sensorType, String zone, double value, Timestamp timestamp) throws IllegalArgumentException {
+        // check if sensor type is a valid option
+        if (
+            !(sensorType.equals("temperature")
+            || sensorType.equals("humidity")
+            || sensorType.equals("soilMoisture")
+            || sensorType.equals("light")
+        )) {
+            throw new IllegalArgumentException("Invalid sensor type: "+sensorType);
+        }
+
+        // Check if sensor type and sensor ID match
         this.sensorID = validateSensorID(sensorID);
-        this.sensorType = validateSensorType(sensorType);
+        if (!IDtoType(sensorID).equals(sensorType))
+            throw new IllegalArgumentException("Sensor ID and type do not match. ID=" + sensorID + ", type="+sensorType + ", expected="+IDtoType(sensorID));
+        
+        this.sensorType = sensorType;
         this.zone = validateZone(zone);
         this.value = value;
         this.timestamp = timestamp;
@@ -54,15 +68,13 @@ public class SensorReading {
     public String getSensorType() {
         return sensorType;
     }
-    public void setSensorType(String type) {
-        sensorType = validateSensorType(type);
-    }
 
     public String getSensorID() {
         return sensorID;
     }
     public void setSensorID(String id) {
         sensorID = validateSensorID(id);
+        sensorType = IDtoType(id);
     }
 
     public String getZone() {
@@ -82,13 +94,14 @@ public class SensorReading {
    
     // -------------------VALIDATION-----------------------
     public static String validateZone(String zone) throws IllegalArgumentException{
-        compare(zoneList, zone, "Invalid zone: " + zone);
+        if (
+            !(zone.equals("ZoneA")
+            || zone.equals("ZoneB")
+            || zone.equals("ZoneC")
+        )) {
+            throw new IllegalArgumentException("Invalid zone: "+zone);
+        }
         return zone;
-    }
-
-    public static String validateSensorType(String sensor) throws IllegalArgumentException {
-        compare(sensorTypeList, sensor, "Invalid sensor type: " + sensor);
-        return sensor;
     }
 
     public static String validateSensorID(String sensorID) throws IllegalArgumentException {
@@ -97,11 +110,11 @@ public class SensorReading {
         }
 
         // Test prefix
-        String prefix = sensorID.substring(0,3);
-        if (Character.isLetter(sensorID.charAt(3))) prefix += sensorID.charAt(3);
-        compare(sensorPrefixes, prefix, "Invalid sensor ID: Invalid sensor prefix. Passed: " + sensorID);
+        if (IDtoType(sensorID).equals("unknown")) throw new IllegalArgumentException("Invalid ID prefix:"+sensorID); 
 
         // Test number
+        String prefix = sensorID.substring(0,3);
+        if (Character.isLetter(sensorID.charAt(3))) prefix += sensorID.charAt(3);
         String suffix = sensorID.substring(prefix.length());
 
         for (int i = 0; i < suffix.length(); i++) {
@@ -112,13 +125,16 @@ public class SensorReading {
         return sensorID;
     }
 
-    private static void compare(String[] arr, String txt, String errMsg) throws IllegalArgumentException {
-        boolean isValid = false;
-        for (String x : arr) {
-            if (x.equals(txt)) {
-                isValid = true;
-            }
-        }
-        if (!isValid) throw new IllegalArgumentException(errMsg);
+    public static String IDtoType(String id) {
+        String prefix = id.substring(0,3);
+        if (Character.isLetter(id.charAt(3))) prefix += id.charAt(3);
+        
+        return switch(prefix){
+            case "TMP" -> "temperature";
+            case "HMD" -> "humidity";
+            case "LGT" -> "light";
+            case "SOIL" -> "soilMoisture";
+            default -> "unknown";
+        };
     }
 }
